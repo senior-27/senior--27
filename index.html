@@ -439,6 +439,7 @@ body{
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-analytics-compat.js"></script>
 
 <script>
 // ---- Firebase setup (real backend — works on any hosting, replaces window.storage) ----
@@ -448,14 +449,16 @@ const firebaseConfig = {
   projectId: "senior-27",
   storageBucket: "senior-27.firebasestorage.app",
   messagingSenderId: "1034970186713",
-  appId: "1:1034970186713:web:e94d26247f2d0d8d338fc8"
+  appId: "1:1034970186713:web:e94d26247f2d0d8d338fc8",
+  measurementId: "G-DM1X1N8PF4"
 };
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 const auth = firebase.auth();
+try{ firebase.analytics(); }catch(e){ /* analytics blocked (ad-blocker etc.) — site works fine without it */ }
 
-const OWNER_EMAIL = 'mahmouddahmedd2010221@gmail.com';
-const OWNER_UID = 'A9Y1unqEBtg3T5PFM0CoQBdh14m2';
+const OWNER_EMAIL = 'owner.login.senior27@gmail.com';
+const OWNER_UID = 'GNHk3y24WGfgFil3W0G4CBhpDN63';
 const PHOTOS_COLLECTION = db.collection('photos');
 const WALLPAPER_DOC = db.collection('settings').doc('wallpaper');
 
