@@ -1035,8 +1035,12 @@ function updatePhotoCountDOM(val){
 async function loadPhotos(){
   skeletonState.hidden = false;
   try{
-    const snapshot = await PHOTOS_COLLECTION.orderBy('createdAt', 'asc').get();
+    // fetch without server-side orderBy: Firestore silently excludes any document
+    // missing the ordered field, which would hide older photos saved before
+    // createdAt existed. Sort client-side instead so nothing gets dropped.
+    const snapshot = await PHOTOS_COLLECTION.get();
     photos = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    photos.sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
   }catch(e){
     photos = [];
     showToast('Failed to load photos. Check your connection.', 'error');
