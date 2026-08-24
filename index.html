@@ -1629,10 +1629,23 @@ function renderDashMomentsList(){
     const id = row.dataset.id;
     row.querySelector('.m-title').addEventListener('change', (e)=> MOMENTS.doc(id).update({title: e.target.value.trim()}).then(()=>{loadMoments().then(renderPublicSite); showToast('Saved','success');}));
     row.querySelector('.m-caption').addEventListener('change', (e)=> MOMENTS.doc(id).update({caption: e.target.value.trim()}).then(()=>{loadMoments().then(renderPublicSite); showToast('Saved','success');}));
-    row.querySelector('[data-act=delete]').addEventListener('click', async ()=>{
+    row.querySelector('[data-act=delete]').addEventListener('click', async (e)=>{
       if(!confirm('Remove this moment?')) return;
-      await MOMENTS.doc(id).delete();
-      await loadMoments(); renderDashMomentsList(); renderPublicSite();
+      const btn = e.target;
+      btn.disabled = true; btn.textContent = 'Removing…';
+      try{
+        await withTimeout(MOMENTS.doc(id).delete(), 15000, 'moment-delete');
+        await loadMoments(); renderDashMomentsList(); renderPublicSite();
+        showToast('Moment removed', 'success');
+      }catch(err){
+        btn.disabled = false; btn.textContent = 'Remove';
+        showToast(
+          err && String(err.message).startsWith('timeout')
+            ? 'Taking too long — check your connection and try again'
+            : 'Could not remove moment — try again',
+          'error'
+        );
+      }
     });
     row.querySelector('[data-act=up]').addEventListener('click', ()=> moveMoment(id, -1));
     row.querySelector('[data-act=down]').addEventListener('click', ()=> moveMoment(id, 1));
@@ -1703,15 +1716,25 @@ function renderDashWallpaperList(){
     const id = row.dataset.id;
     row.querySelector('.w-title').addEventListener('change', (e)=> WALLPAPERS.doc(id).update({title: e.target.value.trim()}).then(()=>{loadWallpapers().then(renderPublicSite); showToast('Saved','success');}));
     row.querySelector('.w-desc').addEventListener('change', (e)=> WALLPAPERS.doc(id).update({description: e.target.value.trim()}).then(()=>{loadWallpapers().then(renderPublicSite); showToast('Saved','success');}));
-    row.querySelector('[data-act=delete]').addEventListener('click', async ()=>{
+    row.querySelector('[data-act=delete]').addEventListener('click', async (e)=>{
       if(!confirm('Delete this wallpaper?')) return;
+      const btn = e.target;
+      btn.disabled = true; btn.textContent = 'Deleting…';
       try{
         const wp = wallpapersCache.find(w => w.id === id);
-        await WALLPAPERS.doc(id).delete();
+        await withTimeout(WALLPAPERS.doc(id).delete(), 15000, 'wallpaper-delete');
         if(wp) deleteStorageFileIfApplicable(wp.image);
         await loadWallpapers(); renderDashWallpaperList(); renderPublicSite();
         showToast('Wallpaper deleted', 'success');
-      }catch(e){ showToast('Could not delete wallpaper', 'error'); }
+      }catch(err){
+        btn.disabled = false; btn.textContent = 'Delete';
+        showToast(
+          err && String(err.message).startsWith('timeout')
+            ? 'Taking too long — check your connection and try again'
+            : 'Could not delete wallpaper',
+          'error'
+        );
+      }
     });
     row.querySelector('[data-act=up]').addEventListener('click', ()=> moveWallpaper(id, -1));
     row.querySelector('[data-act=down]').addEventListener('click', ()=> moveWallpaper(id, 1));
