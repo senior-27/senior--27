@@ -1032,10 +1032,11 @@ function renderPublicSite(){
             <span aria-hidden="true">⬇</span> Download
           </button>
         </div>
+        ${(w.title || w.description) ? `
         <div class="wp-meta">
-          <div class="wp-title">${esc(w.title || 'Untitled')}</div>
+          ${w.title ? `<div class="wp-title">${esc(w.title)}</div>` : ''}
           ${w.description ? `<div class="wp-desc">${esc(w.description)}</div>` : ''}
-        </div>
+        </div>` : ''}
       </div>`).join('');
     wpEl.querySelectorAll('.wp-download-btn').forEach(btn => {
       btn.addEventListener('click', ()=> downloadWallpaper(wallpapersCache[parseInt(btn.dataset.idx)], btn));
@@ -1679,7 +1680,7 @@ $('wallpaperFileInput').addEventListener('change', async ()=>{
   try{
     const { dataUrl } = await fileToCompressed(file, 1600, 0.8);
     let maxOrder = wallpapersCache.reduce((m,w)=> Math.max(m, w.sortOrder ?? 0), 0);
-    await withTimeout(WALLPAPERS.add({ image: dataUrl, title:'New Wallpaper', description:'', sortOrder: maxOrder + 1, createdAt: Date.now() }), 20000, 'wallpaper-save');
+    await withTimeout(WALLPAPERS.add({ image: dataUrl, title:'', description:'', sortOrder: maxOrder + 1, createdAt: Date.now() }), 20000, 'wallpaper-save');
     $('wallpaperFileInput').value = '';
     await loadWallpapers();
     renderDashWallpaperList();
