@@ -303,34 +303,27 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
   .moment-item.mv-pending .moment-img{ clip-path:none; }
   .moment-item.mv-pending .moment-text > *{ opacity:1; transform:none; }
 }
-/* Default (cover): used for images close to a standard landscape ratio, where a
-   gentle crop reads as intentional composition rather than lost content. */
-.moment-img{
-  overflow:hidden; background:var(--card);
-  aspect-ratio:4/3; min-height:260px; max-height:520px;
-  display:flex; align-items:center; justify-content:center;
-}
+/* Each Moment's frame is sized to that photo's own real aspect ratio (set
+   inline per-photo in JS as style="aspect-ratio:W/H", the same technique the
+   Gallery masonry already uses) rather than a fixed 4:3 crop — so a photo is
+   always shown at its own proportions, in full, never cropped. object-fit:cover
+   here is a formality: since the box ratio already equals the image's own
+   ratio, cover fills it exactly with nothing trimmed. For the rare legacy
+   photo saved without stored dimensions, height:100% resolves to auto (no
+   aspect-ratio was set on the box), so the image still renders uncropped at
+   its natural size, full width. */
+.moment-img{ overflow:hidden; background:var(--card); }
 .moment-img[data-moment-id]{ cursor:pointer; }
 .moment-img[data-moment-id] img{ transition:transform .6s cubic-bezier(.2,.7,.3,1); }
 .moment-img[data-moment-id]:hover img{ transform:scale(1.035); }
 .moment-img[data-moment-id]:focus-visible{ outline:2px solid var(--ink); outline-offset:3px; }
-.moment-img img{width:100%; height:100%; object-fit:cover; object-position:center 35%;}
-/* Applied by JS (applyMomentFit) once the image's real dimensions are known.
-   Portrait shots and unusually wide/narrow shots switch to a flexible,
-   uncropped container instead of being forced into the 4:3 frame above —
-   this is what keeps people and key details from being cut off. */
-.moment-img.moment-fit-contain{
-  aspect-ratio:auto; height:clamp(320px, 46vw, 560px); max-height:70vh; background:var(--card);
-}
-.moment-img.moment-fit-contain img{ width:100%; height:100%; object-fit:contain; object-position:center; }
+.moment-img img{width:100%; height:100%; object-fit:cover; object-position:center; display:block;}
 .moment-text .eyebrow{margin-bottom:14px;}
 .moment-text h3{font-family:'Fraunces',serif; font-size:28px; font-weight:500; margin:0 0 12px;}
 .moment-text p{color:var(--ink-soft); font-size:14.5px; line-height:1.7; max-width:400px;}
 @media(max-width:760px){
   .moment-item, .moment-item:nth-child(even){grid-template-columns:1fr; order:0;}
   .moment-item{grid-template-columns:1fr; gap:20px; padding:40px 0;}
-  .moment-img{max-height:420px;}
-  .moment-img.moment-fit-contain{height:clamp(240px, 70vw, 420px);}
 }
 
 /* ---------- Wallpaper ---------- */
@@ -938,18 +931,6 @@ function heroFallbackMarkup(){
 /* Generic broken-image handler: hide the element instead of showing the browser's broken-image icon */
 function brokenImgAttr(){ return `onerror="this.style.display='none'; this.dataset.broken='1';"`; }
 
-/* Decides, per photo, whether its Moments frame should crop gently (cover) or
-   show the whole image (contain). Portrait shots and very wide/narrow shots
-   default to "contain" so people and key details are never cut off; ordinary
-   landscape shots keep the tidier cover crop. Runs once per image via onload. */
-function applyMomentFit(img){
-  if(!img || !img.naturalWidth || !img.naturalHeight) return;
-  const wrap = img.closest('.moment-img');
-  if(!wrap) return;
-  const ratio = img.naturalWidth / img.naturalHeight;
-  wrap.classList.toggle('moment-fit-contain', ratio < 0.82 || ratio > 2.1);
-}
-
 /* Triggers the one-time editorial reveal (CSS above) as each Moment scrolls
    into view. `.mv-pending` is only ever added here, right before observing —
    never left as the default state — and any failure below is caught and
@@ -1357,7 +1338,7 @@ function renderPublicSite(){
       const dateLabel = formatMomentDate(resolveMomentDate(m, p));
       return `
       <div class="moment-item">
-        <div class="moment-img"${(p && p.image) ? ` data-moment-id="${m.id}" role="button" tabindex="0" aria-label="View this photo larger"` : ''}>${(p && p.image) ? `<img src="${p.image}" alt="${esc(m.title||'')}" loading="lazy" decoding="async" onload="applyMomentFit(this)" ${brokenImgAttr()}>` : ''}</div>
+        <div class="moment-img"${(p && p.width && p.height) ? ` style="aspect-ratio:${p.width}/${p.height}"` : ''}${(p && p.image) ? ` data-moment-id="${m.id}" role="button" tabindex="0" aria-label="View this photo larger"` : ''}>${(p && p.image) ? `<img src="${p.image}" alt="${esc(m.title||'')}" loading="lazy" decoding="async" ${brokenImgAttr()}>` : ''}</div>
         <div class="moment-text">
           <div class="moment-index">${String(i+1).padStart(2,'0')} / ${String(momentsCache.length).padStart(2,'0')}</div>
           ${dateLabel ? `<div class="moment-date">${esc(dateLabel)}</div>` : ''}
@@ -1367,12 +1348,6 @@ function renderPublicSite(){
         </div>
       </div>`;
     }).join('');
-    // Images already in the browser cache fire onload before the listener above
-    // is attached (it's set via the img's own attribute string, so this isn't
-    // actually possible here — but decoded/cached images can resolve
-    // synchronously in some browsers). Re-check any image that's already
-    // complete so its fit class is never missed.
-    momEl.querySelectorAll('.moment-img img').forEach(img => { if(img.complete) applyMomentFit(img); });
     initMomentsReveal();
     // Click (or Enter/Space, since this is a div acting as a button) opens
     // the same large-view lightbox the Gallery uses — single-image mode, no
