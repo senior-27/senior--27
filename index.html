@@ -81,8 +81,20 @@ nav.main-nav a:hover{color:var(--ink);}
 .owner-pill:focus-visible{opacity:1;}
 .owner-pill:active{transform:scale(.97);}
 .owner-pill.unlocked{background:var(--ink); color:var(--cream); border-color:var(--ink); opacity:1;}
-.hamburger{display:none; background:none; border:none; font-size:22px; cursor:pointer; transition:opacity .2s ease;}
+.hamburger{
+  display:none; background:none; border:none; cursor:pointer; padding:4px;
+  color:var(--ink); transition:opacity .2s ease;
+}
 .hamburger:hover{opacity:0.7;}
+.hamburger svg{width:22px; height:22px; display:block; overflow:visible;}
+.hamburger .ham-line{
+  stroke:currentColor; stroke-width:1.6; stroke-linecap:round;
+  transition:transform .3s cubic-bezier(.4,0,.2,1), opacity .2s ease;
+  transform-box:fill-box; transform-origin:center;
+}
+.hamburger.open .ham-top{ transform:translateY(5px) rotate(45deg); }
+.hamburger.open .ham-mid{ opacity:0; }
+.hamburger.open .ham-bot{ transform:translateY(-5px) rotate(-45deg); }
 
 @media(max-width:860px){
   nav.main-nav{display:none;}
@@ -268,7 +280,10 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
 /* ---------- Moments ---------- */
 .moments-section{padding:90px 0; border-top:1px solid var(--line);}
 .section-head-row{display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:44px; flex-wrap:wrap; gap:18px;}
-.section-head-row h2{font-family:'Fraunces',serif; font-size:40px; font-weight:500; margin:14px 0 0;}
+.section-head-row h2{font-family:'Fraunces',serif; font-size:40px; font-weight:500; margin:14px 0 0; position:relative; display:inline-block; padding-bottom:16px;}
+.section-head-row h2::after{
+  content:''; position:absolute; left:0; bottom:0; width:46px; height:3px; background:var(--accent);
+}
 .moment-item{
   display:grid; grid-template-columns:0.6fr 1fr; gap:44px; align-items:center;
   padding:54px 0; border-top:1px solid var(--line);
@@ -276,7 +291,7 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
 .moment-item:nth-child(even){ grid-template-columns:1fr 0.6fr; }
 .moment-item:nth-child(even) .moment-img{order:2;}
 .moment-index{
-  font-family:'Fraunces',serif; font-size:15px; font-weight:500; color:var(--ink-soft);
+  font-family:'Fraunces',serif; font-size:15px; font-weight:600; color:var(--accent);
   letter-spacing:0.5px; margin-bottom:10px;
 }
 .moment-date{
@@ -303,21 +318,24 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
   .moment-item.mv-pending .moment-img{ clip-path:none; }
   .moment-item.mv-pending .moment-text > *{ opacity:1; transform:none; }
 }
-/* Each Moment's frame is sized to that photo's own real aspect ratio (set
-   inline per-photo in JS as style="aspect-ratio:W/H", the same technique the
-   Gallery masonry already uses) rather than a fixed 4:3 crop — so a photo is
-   always shown at its own proportions, in full, never cropped. object-fit:cover
-   here is a formality: since the box ratio already equals the image's own
-   ratio, cover fills it exactly with nothing trimmed. For the rare legacy
-   photo saved without stored dimensions, height:100% resolves to auto (no
-   aspect-ratio was set on the box), so the image still renders uncropped at
-   its natural size, full width. */
+/* A Moment's frame has no pre-set height or aspect-ratio at all — its size
+   comes entirely from the actual loaded photo (width:100%, natural/auto
+   height on the <img>, no object-fit, no percentage height). This was
+   deliberately changed from an earlier version that reserved space using
+   the photo's *stored* width/height (to avoid a layout jump while the
+   lazy-loaded image was still loading, the same way the Gallery masonry
+   does): for a handful of photos that stored width/height didn't match the
+   photo's real proportions, and since the frame clips overflow, that stale
+   number was silently cutting faces off the bottom of the real image. Using
+   only the real, decoded image removes any dependence on that stored data
+   being correct — this can only ever show the photo at its true size, in
+   full, on every device, no matter what a photo's Firestore record says. */
 .moment-img{ overflow:hidden; background:var(--card); }
 .moment-img[data-moment-id]{ cursor:pointer; }
 .moment-img[data-moment-id] img{ transition:transform .6s cubic-bezier(.2,.7,.3,1); }
 .moment-img[data-moment-id]:hover img{ transform:scale(1.035); }
 .moment-img[data-moment-id]:focus-visible{ outline:2px solid var(--ink); outline-offset:3px; }
-.moment-img img{width:100%; height:100%; object-fit:cover; object-position:center; display:block;}
+.moment-img img{width:100%; display:block;}
 .moment-text .eyebrow{margin-bottom:14px;}
 .moment-text h3{font-family:'Fraunces',serif; font-size:28px; font-weight:500; margin:0 0 12px;}
 .moment-text p{color:var(--ink-soft); font-size:14.5px; line-height:1.7; max-width:400px;}
@@ -329,7 +347,16 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
 /* ---------- Wallpaper ---------- */
 .wallpaper-section{padding:90px 0; border-top:1px solid var(--line);}
 .wallpaper-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:18px;}
-.wp-card{background:var(--card); overflow:hidden; cursor:pointer;}
+.wp-card{
+  background:var(--card); overflow:hidden; cursor:pointer;
+  border:1px solid var(--line);
+  transition:transform .3s cubic-bezier(.2,.7,.3,1), box-shadow .3s ease, border-color .3s ease;
+}
+.wp-card:hover{
+  transform:translateY(-4px);
+  box-shadow:0 14px 30px rgba(27,26,23,0.14);
+  border-color:var(--ink);
+}
 .wp-card .wp-img-wrap{aspect-ratio:3/4; overflow:hidden;}
 .wp-card img{width:100%; height:100%; object-fit:cover; transition:transform .5s ease;}
 .wp-card:hover img{transform:scale(1.05);}
@@ -522,7 +549,13 @@ footer{border-top:1px solid var(--line); padding:34px 0; margin-top:20px;}
     <div class="brand" id="brandText"><span class="brand-word" id="brandWord">SENIOR</span><span class="brand-num" id="brandNum">27</span></div>
     <span class="brand-credit">Made by Mahmoud Ahmed</span>
   </div>
-  <button class="hamburger" id="hamburgerBtn" aria-label="Toggle menu" aria-expanded="false" aria-controls="mainNav">☰</button>
+  <button class="hamburger" id="hamburgerBtn" aria-label="Toggle menu" aria-expanded="false" aria-controls="mainNav">
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <line class="ham-line ham-top" x1="3" y1="7" x2="21" y2="7"></line>
+      <line class="ham-line ham-mid" x1="3" y1="12" x2="21" y2="12"></line>
+      <line class="ham-line ham-bot" x1="3" y1="17" x2="21" y2="17"></line>
+    </svg>
+  </button>
   <nav class="main-nav" id="mainNav">
     <a href="#home">Home</a>
     <a href="#gallery">Gallery</a>
@@ -1338,7 +1371,7 @@ function renderPublicSite(){
       const dateLabel = formatMomentDate(resolveMomentDate(m, p));
       return `
       <div class="moment-item">
-        <div class="moment-img"${(p && p.width && p.height) ? ` style="aspect-ratio:${p.width}/${p.height}"` : ''}${(p && p.image) ? ` data-moment-id="${m.id}" role="button" tabindex="0" aria-label="View this photo larger"` : ''}>${(p && p.image) ? `<img src="${p.image}" alt="${esc(m.title||'')}" loading="lazy" decoding="async" ${brokenImgAttr()}>` : ''}</div>
+        <div class="moment-img"${(p && p.image) ? ` data-moment-id="${m.id}" role="button" tabindex="0" aria-label="View this photo larger"` : ''}>${(p && p.image) ? `<img src="${p.image}" alt="${esc(m.title||'')}" loading="lazy" decoding="async" ${brokenImgAttr()}>` : ''}</div>
         <div class="moment-text">
           <div class="moment-index">${String(i+1).padStart(2,'0')} / ${String(momentsCache.length).padStart(2,'0')}</div>
           ${dateLabel ? `<div class="moment-date">${esc(dateLabel)}</div>` : ''}
@@ -1484,10 +1517,12 @@ document.addEventListener('keydown', (e)=>{
 /* ============ Mobile nav ============ */
 $('hamburgerBtn').addEventListener('click', ()=>{
   const isOpen = $('mainNav').classList.toggle('open');
+  $('hamburgerBtn').classList.toggle('open', isOpen);
   $('hamburgerBtn').setAttribute('aria-expanded', String(isOpen));
 });
 document.querySelectorAll('.main-nav a').forEach(a => a.addEventListener('click', ()=>{
   $('mainNav').classList.remove('open');
+  $('hamburgerBtn').classList.remove('open');
   $('hamburgerBtn').setAttribute('aria-expanded', 'false');
 }));
 
