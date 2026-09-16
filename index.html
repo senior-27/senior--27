@@ -59,9 +59,12 @@ header.site-header{
 .brand{font-family:'Fraunces',serif; font-weight:600; letter-spacing:1px; line-height:0.95; display:flex; flex-direction:column; gap:1px;}
 .brand .brand-word{font-size:13px; letter-spacing:3px; text-transform:uppercase; font-weight:600; color:var(--ink);}
 .brand .brand-num{font-size:23px; font-weight:600; color:var(--accent); letter-spacing:0.5px;}
-.brand-block{display:flex; align-items:center; gap:12px;}
-.brand-block .brand-credit{font-size:10.5px; letter-spacing:0.3px; color:var(--ink-soft); opacity:0.65; white-space:nowrap;}
-@media(max-width:600px){ .brand-block .brand-credit{display:none;} }
+.brand-block{display:flex; flex-direction:column; align-items:flex-start; gap:4px;}
+.brand-block .brand-credit{
+  font-size:10px; letter-spacing:1px; text-transform:uppercase; font-weight:600;
+  color:var(--ink-soft); opacity:0.6; white-space:nowrap; max-width:100%;
+  overflow:hidden; text-overflow:ellipsis;
+}
 nav.main-nav{display:flex; gap:34px; flex-wrap:wrap;}
 nav.main-nav a{
   font-size:12.5px; letter-spacing:1.5px; text-transform:uppercase; font-weight:600;
@@ -70,13 +73,14 @@ nav.main-nav a{
 nav.main-nav a:hover{color:var(--ink);}
 .header-actions{display:flex; align-items:center; gap:12px;}
 .owner-pill{
-  border:1px solid var(--line); background:transparent; color:var(--ink-soft);
-  font-size:11.5px; letter-spacing:1.5px; text-transform:uppercase; font-weight:600;
-  padding:9px 18px; border-radius:20px; transition:all .2s ease;
+  border:1px solid transparent; background:transparent; color:var(--ink-soft);
+  font-size:11px; letter-spacing:1.3px; text-transform:uppercase; font-weight:600;
+  padding:8px 14px; border-radius:20px; opacity:0.75; transition:all .2s ease;
 }
-.owner-pill:hover{border-color:var(--ink); color:var(--ink);}
+.owner-pill:hover{border-color:var(--line); color:var(--ink); opacity:1;}
+.owner-pill:focus-visible{opacity:1;}
 .owner-pill:active{transform:scale(.97);}
-.owner-pill.unlocked{background:var(--ink); color:var(--cream); border-color:var(--ink);}
+.owner-pill.unlocked{background:var(--ink); color:var(--cream); border-color:var(--ink); opacity:1;}
 .hamburger{display:none; background:none; border:none; font-size:22px; cursor:pointer; transition:opacity .2s ease;}
 .hamburger:hover{opacity:0.7;}
 
@@ -102,7 +106,10 @@ nav.main-nav a:hover{color:var(--ink);}
   font-family:'Fraunces',serif; font-weight:500; font-size:clamp(56px,8vw,108px);
   line-height:0.92; margin:0; letter-spacing:-1px;
 }
-.hero-left h1 .hero-num{color:var(--accent);}
+.hero-left h1 .hero-num{
+  color:var(--accent); font-size:1.28em; display:inline-block;
+  letter-spacing:-2px; font-weight:600;
+}
 .hero-sub-row{display:flex; align-items:flex-end; gap:40px; margin-top:6px; flex-wrap:wrap;}
 .hero-desc{color:var(--ink-soft); font-size:15.5px; line-height:1.7; max-width:280px; margin:18px 0 26px;}
 .btn-primary{
@@ -187,6 +194,8 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
   .hero-left{padding:24px 0 30px;}
   .hero-photo-main{min-height:340px; clip-path:none; border-radius:2px;}
   .hero-side-note{position:static; width:auto; margin-top:16px;}
+  .wrap{padding:0 24px;}
+  header.site-header{padding:20px 24px;}
 }
 
 /* ---------- About ---------- */
@@ -196,9 +205,8 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
 .about-visual .about-image{position:absolute; inset:0; background:var(--card);}
 .about-visual .about-image img{width:100%; height:100%; object-fit:cover;}
 .about-overlay-text{
-  position:relative; z-index:2; background:rgba(246,242,234,0.68);
-  backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px);
-  box-shadow:0 12px 40px rgba(27,26,23,0.12);
+  position:relative; z-index:2; background:var(--cream-deep);
+  border:1px solid var(--line);
   padding:36px 40px; margin:24px 24px 40px; max-width:500px;
 }
 .about-overlay-text .eyebrow{color:var(--ink-soft);}
@@ -207,7 +215,7 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
 .about-overlay-text p{color:var(--ink-soft); font-size:14px; line-height:1.7; margin:0 0 22px; max-width:380px;}
 .about-stat .big-num{font-family:'Fraunces',serif; font-size:64px; font-weight:500; line-height:1;}
 .about-stat .stat-label{font-size:12px; letter-spacing:1.5px; text-transform:uppercase; color:var(--ink-soft); margin-top:8px; font-weight:600;}
-.about-stat .stat-note{background:var(--card); padding:16px 18px; font-size:12.5px; color:var(--ink-soft); line-height:1.6; margin-top:26px;}
+.about-stat .stat-note{border-top:1px solid var(--line); padding-top:16px; font-size:12.5px; color:var(--ink-soft); line-height:1.6; margin-top:26px;}
 
 @media(max-width:860px){
   .about-grid{grid-template-columns:1fr; gap:30px;}
@@ -237,39 +245,92 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
 .masonry .g-item img{width:100%; display:block; transition:transform .5s cubic-bezier(.2,.7,.3,1);}
 .masonry .g-item:hover img{transform:scale(1.04);}
 .masonry .g-item .g-cap{
-  position:absolute; left:0; right:0; bottom:0; padding:14px;
+  position:absolute; left:0; right:0; bottom:0; padding:16px;
   background:linear-gradient(transparent, rgba(0,0,0,0.55));
-  color:#f6f2ea; font-size:12.5px; opacity:0; transition:opacity .25s ease;
+  color:#f6f2ea; font-family:'Fraunces',serif; font-style:italic; font-weight:500;
+  font-size:13.5px; opacity:0; transition:opacity .25s ease;
 }
 .masonry .g-item:hover .g-cap{opacity:1;}
 @media(max-width:640px){
   .masonry{columns:1;}
   .masonry .g-item .g-cap{opacity:1; background:linear-gradient(transparent, rgba(0,0,0,0.65));}
   .wrap{padding:0 20px;}
+  header.site-header{padding:18px 20px;}
 }
 @media(max-width:420px){
   .hero-left{padding:20px 0 24px;}
 }
 
 .view-all-row{text-align:center; margin-top:40px;}
+.gallery-load-more-wrap{text-align:center; margin-top:36px;}
+.gallery-load-more:disabled{opacity:0.6; cursor:default;}
 
 /* ---------- Moments ---------- */
 .moments-section{padding:90px 0; border-top:1px solid var(--line);}
 .section-head-row{display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:44px; flex-wrap:wrap; gap:18px;}
 .section-head-row h2{font-family:'Fraunces',serif; font-size:40px; font-weight:500; margin:14px 0 0;}
 .moment-item{
-  display:grid; grid-template-columns:1fr 1fr; gap:50px; align-items:center;
-  padding:50px 0; border-top:1px solid var(--line);
+  display:grid; grid-template-columns:0.6fr 1fr; gap:44px; align-items:center;
+  padding:54px 0; border-top:1px solid var(--line);
 }
+.moment-item:nth-child(even){ grid-template-columns:1fr 0.6fr; }
 .moment-item:nth-child(even) .moment-img{order:2;}
-.moment-img{overflow:hidden; background:var(--card); aspect-ratio:16/11;}
-.moment-img img{width:100%; height:100%; object-fit:cover;}
+.moment-index{
+  font-family:'Fraunces',serif; font-size:15px; font-weight:500; color:var(--ink-soft);
+  letter-spacing:0.5px; margin-bottom:10px;
+}
+.moment-date{
+  font-size:11.5px; letter-spacing:1px; text-transform:uppercase; font-weight:600;
+  color:var(--ink-soft); opacity:0.65; margin:-6px 0 16px;
+}
+/* ---------- Moments reveal ----------
+   A one-time, editorial reveal distinct from the rest of the site's hover/
+   pan animations: the image wipes in first (clip-path), then the text
+   settles in just after, staggered line by line. Default state (no JS, or
+   `.mv-pending` never added) is fully visible — the animation can only ever
+   ADD a temporary hidden state, never leave content stuck hidden. */
+.moment-item .moment-img{ transition: clip-path 0.9s cubic-bezier(.22,.61,.36,1); }
+.moment-item.mv-pending .moment-img{ clip-path: inset(0 0 100% 0); }
+.moment-item .moment-text > *{ transition: opacity .6s ease, transform .6s cubic-bezier(.22,.61,.36,1); }
+.moment-item.mv-pending .moment-text > *{ opacity:0; transform:translateY(14px); }
+.moment-item .moment-text > *:nth-child(1){ transition-delay:.15s; }
+.moment-item .moment-text > *:nth-child(2){ transition-delay:.22s; }
+.moment-item .moment-text > *:nth-child(3){ transition-delay:.29s; }
+.moment-item .moment-text > *:nth-child(4){ transition-delay:.36s; }
+.moment-item .moment-text > *:nth-child(5){ transition-delay:.43s; }
+@media(prefers-reduced-motion: reduce){
+  .moment-item .moment-img, .moment-item .moment-text > *{ transition:none; }
+  .moment-item.mv-pending .moment-img{ clip-path:none; }
+  .moment-item.mv-pending .moment-text > *{ opacity:1; transform:none; }
+}
+/* Default (cover): used for images close to a standard landscape ratio, where a
+   gentle crop reads as intentional composition rather than lost content. */
+.moment-img{
+  overflow:hidden; background:var(--card);
+  aspect-ratio:4/3; min-height:260px; max-height:520px;
+  display:flex; align-items:center; justify-content:center;
+}
+.moment-img[data-moment-id]{ cursor:pointer; }
+.moment-img[data-moment-id] img{ transition:transform .6s cubic-bezier(.2,.7,.3,1); }
+.moment-img[data-moment-id]:hover img{ transform:scale(1.035); }
+.moment-img[data-moment-id]:focus-visible{ outline:2px solid var(--ink); outline-offset:3px; }
+.moment-img img{width:100%; height:100%; object-fit:cover; object-position:center 35%;}
+/* Applied by JS (applyMomentFit) once the image's real dimensions are known.
+   Portrait shots and unusually wide/narrow shots switch to a flexible,
+   uncropped container instead of being forced into the 4:3 frame above —
+   this is what keeps people and key details from being cut off. */
+.moment-img.moment-fit-contain{
+  aspect-ratio:auto; height:clamp(320px, 46vw, 560px); max-height:70vh; background:var(--card);
+}
+.moment-img.moment-fit-contain img{ width:100%; height:100%; object-fit:contain; object-position:center; }
 .moment-text .eyebrow{margin-bottom:14px;}
 .moment-text h3{font-family:'Fraunces',serif; font-size:28px; font-weight:500; margin:0 0 12px;}
 .moment-text p{color:var(--ink-soft); font-size:14.5px; line-height:1.7; max-width:400px;}
 @media(max-width:760px){
-  .moment-item, .moment-item:nth-child(even) .moment-img{grid-template-columns:1fr; order:0;}
-  .moment-item{grid-template-columns:1fr; gap:20px;}
+  .moment-item, .moment-item:nth-child(even){grid-template-columns:1fr; order:0;}
+  .moment-item{grid-template-columns:1fr; gap:20px; padding:40px 0;}
+  .moment-img{max-height:420px;}
+  .moment-img.moment-fit-contain{height:clamp(240px, 70vw, 420px);}
 }
 
 /* ---------- Wallpaper ---------- */
@@ -317,8 +378,19 @@ footer{border-top:1px solid var(--line); padding:34px 0; margin-top:20px;}
 .footer-row{display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:14px;}
 .footer-row .brand-line{font-family:'Fraunces',serif; font-weight:600;}
 .footer-row .tagline{font-size:12.5px; color:var(--ink-soft); letter-spacing:0.5px;}
-.social-icons{display:flex; gap:14px;}
-.social-icons a{width:34px; height:34px; border:1px solid var(--line); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:13px;}
+.footer-instagram{
+  display:inline-flex; align-items:center; gap:10px; color:var(--ink-soft);
+  transition:opacity .2s ease;
+}
+.footer-instagram:hover, .footer-instagram:focus-visible{opacity:0.6;}
+.footer-instagram .ig-badge{
+  width:36px; height:36px; border:1px solid var(--line); border-radius:50%;
+  display:flex; align-items:center; justify-content:center; flex-shrink:0;
+}
+.footer-instagram .ig-badge svg{width:16px; height:16px; fill:none; stroke:currentColor; stroke-width:1.6;}
+.footer-instagram .ig-badge svg .ig-dot{fill:currentColor; stroke:none;}
+.footer-instagram .ig-handle{font-size:12px; letter-spacing:0.4px; white-space:nowrap;}
+@media(max-width:480px){ .footer-instagram .ig-handle{display:none;} }
 .site-credit{
   text-align:center; font-size:11px; letter-spacing:0.5px; color:var(--ink-soft);
   opacity:0.6; margin-top:22px; padding-top:18px; border-top:1px solid var(--line);
@@ -426,7 +498,12 @@ footer{border-top:1px solid var(--line); padding:34px 0; margin-top:20px;}
 .tile-btn:hover{background:var(--accent);}
 .dash-photo-tile .tile-flags{position:absolute; bottom:6px; left:6px; display:flex; gap:4px;}
 .flag-badge{background:rgba(27,26,23,0.75); color:#fff; font-size:9px; padding:3px 6px; letter-spacing:0.5px; text-transform:uppercase;}
-.dash-caption-input{width:100%; border:none; border-top:1px solid var(--line); padding:6px 8px; font-size:11.5px; background:#fff;}
+.dash-caption-input, .dash-date-input{width:100%; border:none; border-top:1px solid var(--line); padding:6px 8px; font-size:11.5px; background:#fff;}
+.dash-date-input{color:var(--ink-soft);}
+.dash-list-row .row-fields .m-date-row{display:flex; align-items:center; gap:8px; font-size:11px; color:var(--ink-soft);}
+.dash-list-row .row-fields .m-date-row input[type=date]{flex:1;}
+.dash-list-row .row-fields .m-date-reset{border:1px solid var(--line); background:none; padding:5px 9px; font-size:11px; white-space:nowrap; cursor:pointer;}
+.dash-list-row .row-fields .m-date-hint{font-size:10.5px; color:var(--ink-soft); opacity:0.75;}
 .upload-drop{border:1.5px dashed var(--line); padding:34px; text-align:center; color:var(--ink-soft); font-size:13px; margin-bottom:18px; cursor:pointer;}
 .upload-drop:hover{border-color:var(--ink);}
 .dash-list-row{display:flex; gap:14px; align-items:center; background:#fff; padding:12px; margin-bottom:10px;}
@@ -450,7 +527,7 @@ footer{border-top:1px solid var(--line); padding:34px 0; margin-top:20px;}
 <header class="site-header">
   <div class="brand-block">
     <div class="brand" id="brandText"><span class="brand-word" id="brandWord">SENIOR</span><span class="brand-num" id="brandNum">27</span></div>
-    <span class="brand-credit">• made by Mahmoud Ahmed</span>
+    <span class="brand-credit">Made by Mahmoud Ahmed</span>
   </div>
   <button class="hamburger" id="hamburgerBtn" aria-label="Toggle menu" aria-expanded="false" aria-controls="mainNav">☰</button>
   <nav class="main-nav" id="mainNav">
@@ -521,6 +598,9 @@ footer{border-top:1px solid var(--line); padding:34px 0; margin-top:20px;}
       <span class="eyebrow">Gallery is empty</span>
       <p>Photos added by the Owner will appear here.</p>
     </div>
+    <div class="gallery-load-more-wrap">
+      <button type="button" id="galleryLoadMoreBtn" class="btn-outline gallery-load-more" hidden>Load more photos</button>
+    </div>
   </div>
 </section>
 
@@ -562,6 +642,16 @@ footer{border-top:1px solid var(--line); padding:34px 0; margin-top:20px;}
       <div class="brand-line" id="footerBrand">Senior 27 Gallery</div>
       <div class="tagline" id="footerTagline">Memories today, legends tomorrow.</div>
     </div>
+    <a class="footer-instagram" href="https://www.instagram.com/tilsseniorss27?stkn=MXV1dm96YXRzdzczcg==" target="_blank" rel="noopener noreferrer" aria-label="Senior 27 on Instagram — opens in a new tab">
+      <span class="ig-badge">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <rect x="3" y="3" width="18" height="18" rx="5"></rect>
+          <circle cx="12" cy="12" r="4.2"></circle>
+          <circle class="ig-dot" cx="17.3" cy="6.7" r="1.1"></circle>
+        </svg>
+      </span>
+      <span class="ig-handle">@tilsseniorss27</span>
+    </a>
   </div>
   <div class="wrap site-credit">Made by Mahmoud Ahmed</div>
 </footer>
@@ -776,6 +866,15 @@ let wallpapersCache = [];
 let homeSettings = {};
 let aboutSettings = {};
 let siteSettings = {};
+/* Gallery pagination state — see loadPhotos()/loadMoreGalleryPhotos() below.
+   Public visitors only load photos a page at a time; galleryFullyLoaded
+   becomes true once the Owner unlocks the Dashboard (which always needs the
+   complete set) or once "Load more" has reached the end. */
+const GALLERY_PAGE_SIZE = 30;
+let galleryLastDoc = null;
+let galleryHasMore = false;
+let galleryLoadingMore = false;
+let galleryFullyLoaded = false;
 let selectedHeroMainId = null;
 let selectedHeroThumbIds = [];
 let selectedAboutImageId = null;
@@ -794,6 +893,28 @@ function showToast(message, type){
 }
 
 function photoById(id){ return photosCache.find(p => p.id === id); }
+
+/* Moments dates: a Moment's date always traces back to its source Gallery
+   photo (`photo.photoDate`, an owner-editable "YYYY-MM-DD" string), unless
+   the Owner sets a manual override on the Moment itself (`moment.dateOverride`).
+   Neither field existed before this change, and neither is required — a
+   Moment/Photo with no date set simply shows no date, rather than falling
+   back to `createdAt` (the upload timestamp), which is not the same thing as
+   when the moment actually happened and is exactly the kind of "wrong/made
+   up" date this replaces. Dates are parsed by hand (not `new Date(str)`) so
+   a date typed into the picker always displays as that same date, with no
+   UTC/local timezone shift. */
+function resolveMomentDate(moment, photo){
+  return (moment && moment.dateOverride) || (photo && photo.photoDate) || '';
+}
+function formatMomentDate(dateStr){
+  if(!dateStr) return '';
+  const parts = dateStr.split('-').map(Number);
+  if(parts.length !== 3 || parts.some(n => Number.isNaN(n))) return '';
+  const d = new Date(parts[0], parts[1] - 1, parts[2]);
+  if(Number.isNaN(d.getTime())) return '';
+  return d.toLocaleDateString('en-US', { month:'long', day:'numeric', year:'numeric' });
+}
 
 /* Disable a button and show a busy label while an async action runs, so a slow
    Firebase request can never be triggered twice by an impatient double-click,
@@ -817,6 +938,45 @@ function heroFallbackMarkup(){
 /* Generic broken-image handler: hide the element instead of showing the browser's broken-image icon */
 function brokenImgAttr(){ return `onerror="this.style.display='none'; this.dataset.broken='1';"`; }
 
+/* Decides, per photo, whether its Moments frame should crop gently (cover) or
+   show the whole image (contain). Portrait shots and very wide/narrow shots
+   default to "contain" so people and key details are never cut off; ordinary
+   landscape shots keep the tidier cover crop. Runs once per image via onload. */
+function applyMomentFit(img){
+  if(!img || !img.naturalWidth || !img.naturalHeight) return;
+  const wrap = img.closest('.moment-img');
+  if(!wrap) return;
+  const ratio = img.naturalWidth / img.naturalHeight;
+  wrap.classList.toggle('moment-fit-contain', ratio < 0.82 || ratio > 2.1);
+}
+
+/* Triggers the one-time editorial reveal (CSS above) as each Moment scrolls
+   into view. `.mv-pending` is only ever added here, right before observing —
+   never left as the default state — and any failure below is caught and
+   cleaned up, so a Moment can never end up permanently hidden. */
+function initMomentsReveal(){
+  const items = document.querySelectorAll('#momentsList .moment-item');
+  if(!items.length) return;
+  const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if(reduceMotion || !('IntersectionObserver' in window)) return; // stays fully visible, no animation
+  try{
+    const io = new IntersectionObserver((entries)=>{
+      entries.forEach(entry=>{
+        if(entry.isIntersecting){
+          entry.target.classList.remove('mv-pending');
+          io.unobserve(entry.target);
+        }
+      });
+    }, { threshold:0.2, rootMargin:'0px 0px -8% 0px' });
+    items.forEach(item=>{
+      item.classList.add('mv-pending');
+      io.observe(item);
+    });
+  }catch(e){
+    items.forEach(item=> item.classList.remove('mv-pending'));
+  }
+}
+
 /* Milestone-based photo count: never hardcoded, always derived from photosCache.length */
 function computeMilestoneLabel(count){
   if(count <= 0) return '0';
@@ -825,11 +985,20 @@ function computeMilestoneLabel(count){
 }
 
 /* Compress an uploaded image file into a size-capped base64 data URL.
-   Firestore's real hard limit is ~1,048,576 bytes per document; 950,000 leaves
-   safe headroom for the other fields on the same document (caption, flags,
-   etc.) while allowing meaningfully higher resolution/quality than before. */
-const MAX_DOC_BYTES = 950000;
-function compressImageToLimit(img, maxW, startQuality){
+   Firestore's real hard limit is 1,048,576 bytes PER DOCUMENT — and since
+   `image` and `thumb` are stored on the same document, they share that
+   budget. 780,000 (image) + 200,000 (thumb) = 980,000, leaving comfortable
+   headroom for the other small fields (caption, dates, flags) while staying
+   safely under the hard limit. Going higher on either risks the write
+   failing outright for a large/detailed photo — which is worse than
+   slightly smaller. Initial quality/width targets below are chosen so a
+   typical photo fits under these caps on the FIRST pass, without needing
+   the iterative step-down loop — that loop is a safety net, not something
+   we want to lean on, since repeated size+quality cuts are what make an
+   image look visibly soft. */
+const MAX_DOC_BYTES = 780000;
+function compressImageToLimit(img, maxW, startQuality, capBytes){
+  const cap = capBytes || MAX_DOC_BYTES;
   let scale = Math.min(1, maxW / img.width);
   let width = img.width * scale, height = img.height * scale, quality = startQuality;
   function render(w,h,q){
@@ -840,7 +1009,7 @@ function compressImageToLimit(img, maxW, startQuality){
   }
   let dataUrl = render(width, height, quality);
   let attempts = 0;
-  while(dataUrl.length > MAX_DOC_BYTES && attempts < 7){
+  while(dataUrl.length > cap && attempts < 7){
     quality = Math.max(0.5, quality - 0.08);
     width *= 0.9; height *= 0.9;
     dataUrl = render(width, height, quality);
@@ -848,12 +1017,68 @@ function compressImageToLimit(img, maxW, startQuality){
   }
   return { dataUrl, width: Math.round(width), height: Math.round(height) };
 }
+/* Companion thumbnail used anywhere an image only ever displays small (the
+   gallery grid, wallpaper grid). Kept well under the full-size cap so the
+   growing photo count doesn't multiply the bytes every visitor downloads on
+   first load. Full resolution (`image`) is untouched and still used for the
+   lightbox, hero and moments views, so nothing users actually see at size
+   ever loses quality. */
+/* Thumbnail generation. Kept well under the full image's own budget (see
+   MAX_DOC_BYTES above) since both live on the same document — the combined
+   780,000 (image) + 200,000 (thumb) = 980,000 stays safely under Firestore's
+   1,048,576-byte hard limit per document. 900px is comfortably more than the
+   Gallery/Wallpaper grids ever display something at (they max out around
+   ~390px CSS width, so this covers 2x-retina screens with room to spare).
+   THUMB_VERSION lets the backfill below find and regenerate any thumb made
+   with an older, lower-quality version — bump it whenever these numbers
+   change so existing thumbs get refreshed automatically. */
+const THUMB_MAX_BYTES = 200000;
+const THUMB_VERSION = 3;
+/* One-time, best-effort backfill for photos/wallpapers uploaded before the
+   `thumb` field existed, or whose thumb predates THUMB_VERSION above. Runs
+   only from the Dashboard (owner already authenticated), so it adds no
+   extra reads/writes for public visitors. It reuses the already-in-memory
+   `image` — never re-uploads or touches the original file — processes one
+   item at a time with a short pause between writes so it never hammers
+   Firestore, and silently skips any item that fails (offline, etc.) rather
+   than surfacing an error or blocking the dashboard. Cheap to call
+   repeatedly: once every item is on the current version it exits
+   immediately. */
+let backfillRunning = false;
+async function backfillThumbs(collectionRef, cache){
+  if(backfillRunning) return;
+  const targets = cache.filter(item => item.image && (!item.thumb || item.thumbV !== THUMB_VERSION));
+  if(targets.length === 0) return;
+  backfillRunning = true;
+  try{
+    for(const item of targets){
+      try{
+        const img = await new Promise((resolve, reject)=>{
+          const el = new Image();
+          el.onload = ()=> resolve(el);
+          el.onerror = reject;
+          el.src = item.image;
+        });
+        const thumb = compressImageToLimit(img, 900, 0.82, THUMB_MAX_BYTES).dataUrl;
+        await collectionRef.doc(item.id).update({ thumb, thumbV: THUMB_VERSION });
+        item.thumb = thumb; item.thumbV = THUMB_VERSION; // keeps the in-memory cache consistent without a full reload
+      }catch(e){ /* skip this one, keep going */ }
+      await new Promise(r => setTimeout(r, 400));
+    }
+  }finally{
+    backfillRunning = false;
+  }
+}
 function fileToCompressed(file, maxW, quality){
   return new Promise((resolve, reject)=>{
     const reader = new FileReader();
     reader.onload = (ev)=>{
       const img = new Image();
-      img.onload = ()=> resolve(compressImageToLimit(img, maxW, quality));
+      img.onload = ()=>{
+        const full = compressImageToLimit(img, maxW, quality);
+        const thumb = compressImageToLimit(img, 900, 0.82, THUMB_MAX_BYTES).dataUrl;
+        resolve({ ...full, thumb, thumbV: THUMB_VERSION });
+      };
       img.onerror = reject;
       img.src = ev.target.result;
     };
@@ -879,9 +1104,107 @@ function sortByOrderThenCreated(list){
   });
 }
 
+/* Public visitors only ever need: the first page of the Gallery grid (more
+   loads on demand via loadMoreGalleryPhotos below), plus whichever specific
+   photos Hero/About/Moments reference — a small, bounded set that never
+   grows with total gallery size. This is what keeps first load fast no
+   matter how many photos exist, without hiding, deleting, or degrading a
+   single one of them — everything is still there, just fetched a page at a
+   time. The Owner always gets the complete set (see loadAllPhotosForAdmin),
+   since managing the Gallery needs every photo at once. */
 async function loadPhotos(){
+  if(unlocked) return loadAllPhotosForAdmin();
+
+  const wantedIds = new Set();
+  if(homeSettings.heroImageId) wantedIds.add(homeSettings.heroImageId);
+  if(Array.isArray(homeSettings.heroThumbIds)) homeSettings.heroThumbIds.forEach(id => wantedIds.add(id));
+  if(aboutSettings.imageId) wantedIds.add(aboutSettings.imageId);
+  momentsCache.forEach(m => { if(m.photoId) wantedIds.add(m.photoId); });
+
+  const pageSnap = await PHOTOS.orderBy('sortOrder', 'asc').limit(GALLERY_PAGE_SIZE).get();
+  const byId = {};
+  pageSnap.docs.forEach(d => byId[d.id] = { id: d.id, ...d.data() });
+
+  const missingIds = Array.from(wantedIds).filter(id => !byId[id]);
+  if(missingIds.length){
+    const extraDocs = await Promise.all(missingIds.map(id => PHOTOS.doc(id).get().catch(()=>null)));
+    extraDocs.forEach(d => { if(d && d.exists) byId[d.id] = { id: d.id, ...d.data() }; });
+  }
+
+  photosCache = sortByOrderThenCreated(Object.values(byId));
+  galleryLastDoc = pageSnap.docs.length ? pageSnap.docs[pageSnap.docs.length - 1] : null;
+  galleryHasMore = pageSnap.docs.length === GALLERY_PAGE_SIZE;
+  galleryFullyLoaded = false;
+}
+/* The Dashboard needs every photo at once — reordering, deleting, and
+   editing dates/captions/flags all operate across the whole set — so
+   unlocking always fetches the complete collection, exactly as before this
+   change. This only runs for the authenticated Owner, never for public
+   visitors, so it doesn't affect the loading-speed problem this is fixing. */
+async function loadAllPhotosForAdmin(){
   const snap = await PHOTOS.get();
-  photosCache = sortByOrderThenCreated(snap.docs.map(d => ({ id:d.id, ...d.data() })));
+  photosCache = sortByOrderThenCreated(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+  galleryHasMore = false;
+  galleryFullyLoaded = true;
+  // Self-heals the public "X+ photos" counter (computeMilestoneLabel) if it
+  // ever drifts from the real count — cheap, since the full count is
+  // already in hand here.
+  if(siteSettings.totalPhotosCount !== photosCache.length){
+    siteSettings.totalPhotosCount = photosCache.length;
+    SETTINGS.doc('site').set({ totalPhotosCount: photosCache.length }, { merge: true }).catch(()=>{});
+  }
+  // Safety net for the public pagination above: it queries
+  // `.orderBy('sortOrder')`, and Firestore silently excludes any document
+  // missing that field from an orderBy query entirely — which would make an
+  // old photo invisible to public visitors (never lost, just never
+  // reachable by that query). Every photo created by this app's own upload
+  // code already gets a sortOrder, but just in case one doesn't have it,
+  // assign one now, in the background, the same throttled best-effort way
+  // backfillThumbs works. Self-resolves the moment the Owner opens the
+  // Dashboard, same as the thumb backfill.
+  backfillMissingSortOrder();
+}
+let sortOrderBackfillRunning = false;
+async function backfillMissingSortOrder(){
+  if(sortOrderBackfillRunning) return;
+  const targets = photosCache.filter(p => p.sortOrder == null);
+  if(targets.length === 0) return;
+  sortOrderBackfillRunning = true;
+  try{
+    let nextOrder = photosCache.reduce((m,p)=> Math.max(m, p.sortOrder ?? 0), 0) + 1;
+    for(const p of targets){
+      try{
+        await PHOTOS.doc(p.id).update({ sortOrder: nextOrder });
+        p.sortOrder = nextOrder;
+        nextOrder++;
+      }catch(e){ /* skip this one, keep going */ }
+      await new Promise(r => setTimeout(r, 300));
+    }
+  }finally{
+    sortOrderBackfillRunning = false;
+  }
+}
+/* "Load more" for the public Gallery grid — fetches the next page in the
+   same order and appends it, rather than re-fetching everything already
+   shown. Safely does nothing if there's no more to load, a fetch is already
+   in flight, or the Owner already has the complete set loaded. */
+async function loadMoreGalleryPhotos(){
+  if(galleryFullyLoaded || !galleryHasMore || galleryLoadingMore || !galleryLastDoc) return;
+  galleryLoadingMore = true;
+  renderPublicSite();
+  try{
+    const snap = await PHOTOS.orderBy('sortOrder', 'asc').startAfter(galleryLastDoc).limit(GALLERY_PAGE_SIZE).get();
+    const existingIds = new Set(photosCache.map(p => p.id));
+    snap.docs.forEach(d => { if(!existingIds.has(d.id)) photosCache.push({ id: d.id, ...d.data() }); });
+    photosCache = sortByOrderThenCreated(photosCache);
+    galleryLastDoc = snap.docs.length ? snap.docs[snap.docs.length - 1] : galleryLastDoc;
+    galleryHasMore = snap.docs.length === GALLERY_PAGE_SIZE;
+  }catch(e){
+    showToast('Could not load more photos', 'error');
+  }finally{
+    galleryLoadingMore = false;
+    renderPublicSite();
+  }
 }
 async function loadMoments(){
   const snap = await MOMENTS.get();
@@ -900,27 +1223,42 @@ async function loadSettings(){
   siteSettings = siteDoc.exists ? siteDoc.data() : {};
 }
 
+/* Settings and Moments are small, image-free documents, so fetching them
+   first (fast) is what lets loadPhotos() below know exactly which specific
+   photos Hero/About/Moments need — instead of fetching the whole Gallery
+   collection just to answer that question. Wallpaper is unrelated to any of
+   this and still loads fully in parallel the whole time. */
 async function loadAll(){
   const veil = $('loadVeil');
   const failBanner = $('loadFailBanner');
+  const wallpapersP = loadWallpapers();
+
   try{
-    await Promise.all([loadPhotos(), loadMoments(), loadWallpapers(), loadSettings()]);
+    await Promise.all([loadSettings(), loadMoments()]);
+    await loadPhotos();
     failBanner.classList.remove('show');
     document.body.classList.remove('site-loading');
     renderPublicSite();
     if(unlocked) renderDashboard();
   }catch(e){
-    // Never surface the raw Firebase error to visitors. If we already have
-    // cached data from a previous successful load, keep showing it; only
-    // show the retry banner, never a blank page or a technical message.
     failBanner.classList.add('show');
     document.body.classList.remove('site-loading');
     renderPublicSite();
   }finally{
     veil.classList.add('hidden');
   }
+
+  try{
+    await wallpapersP;
+    renderPublicSite();
+    if(unlocked) renderDashboard();
+  }catch(e){
+    // Wallpaper failing independently shouldn't re-trigger the retry banner
+    // over content that already loaded successfully above.
+  }
 }
 $('loadFailRetry').addEventListener('click', loadAll);
+$('galleryLoadMoreBtn').addEventListener('click', loadMoreGalleryPhotos);
 
 /* Splits a brand string into a leading word and a trailing "mark" (usually the
    class number, e.g. "SENIOR 27" -> "SENIOR" / "27") so the logotype can stack
@@ -960,10 +1298,12 @@ function renderPublicSite(){
     ? `<img src="${heroMain.image}" alt="" onerror="this.closest('.hero-photo-main').innerHTML=heroFallbackMarkup();">`
     : heroFallbackMarkup();
 
+  // Hero thumbnails are small (80×100) — the thumb is the right size for
+  // them permanently, same as the Gallery/Wallpaper grids. No upgrade.
   const thumbIds = Array.isArray(homeSettings.heroThumbIds) ? homeSettings.heroThumbIds : [];
   $('heroThumbs').innerHTML = thumbIds.map(id => {
     const p = photoById(id);
-    return p ? `<div class="thumb"><img src="${p.image}" alt="${esc(p.caption||'')}" ${brokenImgAttr()}></div>` : '';
+    return p ? `<div class="thumb"><img src="${p.thumb || p.image}" alt="${esc(p.caption||'')}" ${brokenImgAttr()}></div>` : '';
   }).join('');
 
   // About
@@ -977,7 +1317,11 @@ function renderPublicSite(){
   $('aboutImage').innerHTML = aboutImg ? `<img src="${aboutImg.image}" alt="" ${brokenImgAttr()}>` : '';
 
   // Photo count (auto, milestone-based, never hardcoded)
-  $('photoCountNum').textContent = computeMilestoneLabel(photosCache.length);
+  // Uses the tracked total, not just what's currently loaded in memory —
+  // photosCache may only hold the first Gallery page for public visitors
+  // (see loadPhotos), so photosCache.length would understate the real count.
+  const totalPhotoCount = (typeof siteSettings.totalPhotosCount === 'number') ? siteSettings.totalPhotosCount : photosCache.length;
+  $('photoCountNum').textContent = computeMilestoneLabel(totalPhotoCount);
 
   // Gallery masonry
   const galEl = $('galleryMasonry');
@@ -987,14 +1331,19 @@ function renderPublicSite(){
   }else{
     $('galleryEmpty').hidden = true;
     galEl.innerHTML = photosCache.map((p,i) => `
-      <div class="g-item" data-idx="${i}">
-        <img src="${p.image}" alt="${esc(p.caption||'Gallery photo')}" loading="lazy" ${brokenImgAttr()}>
+      <div class="g-item" data-idx="${i}"${p.width && p.height ? ` style="aspect-ratio:${p.width}/${p.height}"` : ''}>
+        <img src="${p.thumb || p.image}" alt="${esc(p.caption||'Gallery photo')}" loading="lazy" decoding="async" ${brokenImgAttr()}>
         ${p.caption ? `<div class="g-cap">${esc(p.caption)}</div>` : ''}
       </div>`).join('');
     galEl.querySelectorAll('.g-item').forEach(el => {
       el.addEventListener('click', ()=> openLightbox(parseInt(el.dataset.idx)));
     });
   }
+  const loadMoreBtn = $('galleryLoadMoreBtn');
+  const showLoadMore = !galleryFullyLoaded && galleryHasMore;
+  loadMoreBtn.hidden = !showLoadMore;
+  loadMoreBtn.disabled = galleryLoadingMore;
+  loadMoreBtn.textContent = galleryLoadingMore ? 'Loading…' : 'Load more photos';
 
   // Moments
   const momEl = $('momentsList');
@@ -1003,18 +1352,42 @@ function renderPublicSite(){
     $('momentsEmpty').hidden = false;
   }else{
     $('momentsEmpty').hidden = true;
-    momEl.innerHTML = momentsCache.map(m => {
+    momEl.innerHTML = momentsCache.map((m, i) => {
       const p = photoById(m.photoId);
+      const dateLabel = formatMomentDate(resolveMomentDate(m, p));
       return `
       <div class="moment-item">
-        <div class="moment-img">${(p && p.image) ? `<img src="${p.image}" alt="${esc(m.title||'')}" ${brokenImgAttr()}>` : ''}</div>
+        <div class="moment-img"${(p && p.image) ? ` data-moment-id="${m.id}" role="button" tabindex="0" aria-label="View this photo larger"` : ''}>${(p && p.image) ? `<img src="${p.image}" alt="${esc(m.title||'')}" loading="lazy" decoding="async" onload="applyMomentFit(this)" ${brokenImgAttr()}>` : ''}</div>
         <div class="moment-text">
+          <div class="moment-index">${String(i+1).padStart(2,'0')} / ${String(momentsCache.length).padStart(2,'0')}</div>
+          ${dateLabel ? `<div class="moment-date">${esc(dateLabel)}</div>` : ''}
           <span class="eyebrow">A Moment We Kept</span>
           <h3 class="serif">${esc(m.title || '')}</h3>
           <p>${esc(m.caption || '')}</p>
         </div>
       </div>`;
     }).join('');
+    // Images already in the browser cache fire onload before the listener above
+    // is attached (it's set via the img's own attribute string, so this isn't
+    // actually possible here — but decoded/cached images can resolve
+    // synchronously in some browsers). Re-check any image that's already
+    // complete so its fit class is never missed.
+    momEl.querySelectorAll('.moment-img img').forEach(img => { if(img.complete) applyMomentFit(img); });
+    initMomentsReveal();
+    // Click (or Enter/Space, since this is a div acting as a button) opens
+    // the same large-view lightbox the Gallery uses — single-image mode, no
+    // prev/next, since a Moment's photo isn't necessarily part of whichever
+    // Gallery page happens to be loaded right now.
+    momEl.querySelectorAll('.moment-img[data-moment-id]').forEach(wrap => {
+      const openThisMoment = ()=>{
+        const m = momentsCache.find(mm => mm.id === wrap.dataset.momentId);
+        const p = m && photoById(m.photoId);
+        if(!p || !p.image) return;
+        openLightboxImage(p.image, (m.title || m.caption) || p.caption || '');
+      };
+      wrap.addEventListener('click', openThisMoment);
+      wrap.addEventListener('keydown', (e)=>{ if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); openThisMoment(); } });
+    });
   }
 
   // Wallpapers
@@ -1027,7 +1400,7 @@ function renderPublicSite(){
     wpEl.innerHTML = wallpapersCache.map((w, i) => `
       <div class="wp-card" data-idx="${i}">
         <div class="wp-img-wrap">
-          <img src="${w.image}" alt="${esc(w.title||'Wallpaper')}" ${brokenImgAttr()}>
+          <img src="${w.thumb || w.image}" alt="${esc(w.title||'Wallpaper')}" loading="lazy" decoding="async" ${brokenImgAttr()}>
           <button type="button" class="wp-download-btn" data-idx="${i}" aria-label="Download ${esc(w.title||'wallpaper')}" onclick="event.stopPropagation();">
             <span aria-hidden="true">⬇</span> Download
           </button>
@@ -1215,10 +1588,17 @@ $('passSubmit').addEventListener('click', async ()=>{
 });
 
 auth.onAuthStateChanged(user => {
+  const wasUnlocked = unlocked;
   unlocked = !!(user && user.uid === OWNER_UID);
   ownerBtn.textContent = unlocked ? 'Owner Dashboard' : 'Owner Login';
   ownerBtn.classList.toggle('unlocked', unlocked);
   if(!unlocked) $('dashOverlay').classList.remove('open');
+  // The public view only loads a page of photos at a time; the moment the
+  // Owner unlocks, switch to the complete set (loadPhotos() routes to
+  // loadAllPhotosForAdmin() automatically once `unlocked` is true above).
+  if(unlocked && !wasUnlocked && !galleryFullyLoaded){
+    loadPhotos().then(()=>{ renderPublicSite(); renderDashboard(); }).catch(()=>{});
+  }
 });
 
 $('dashCloseBtn').addEventListener('click', ()=>{
@@ -1315,7 +1695,7 @@ wireSuggestBtn('useSuggestFooterTagline', 'in_footerTagline', 'Memories today, l
 function renderHeroMainPicker(){
   const el = $('heroMainPicker');
   if(photosCache.length === 0){ el.innerHTML = '<p style="font-size:12.5px; color:var(--ink-soft);">Upload photos in the Gallery tab first.</p>'; return; }
-  el.innerHTML = photosCache.map(p => `<img src="${p.image}" data-id="${p.id}" alt="${esc(p.caption||'')}" ${brokenImgAttr()} class="${p.id===selectedHeroMainId?'selected':''}">`).join('');
+  el.innerHTML = photosCache.map(p => `<img src="${p.thumb || p.image}" data-id="${p.id}" alt="${esc(p.caption||'')}" ${brokenImgAttr()} class="${p.id===selectedHeroMainId?'selected':''}">`).join('');
   el.querySelectorAll('img').forEach(img => img.addEventListener('click', ()=>{
     selectedHeroMainId = img.dataset.id;
     renderHeroMainPicker();
@@ -1324,7 +1704,7 @@ function renderHeroMainPicker(){
 function renderHeroThumbsPicker(){
   const el = $('heroThumbsPicker');
   if(photosCache.length === 0){ el.innerHTML = '<p style="font-size:12.5px; color:var(--ink-soft);">Upload photos in the Gallery tab first.</p>'; return; }
-  el.innerHTML = photosCache.map(p => `<img src="${p.image}" data-id="${p.id}" alt="${esc(p.caption||'')}" ${brokenImgAttr()} class="${selectedHeroThumbIds.includes(p.id)?'selected':''}">`).join('');
+  el.innerHTML = photosCache.map(p => `<img src="${p.thumb || p.image}" data-id="${p.id}" alt="${esc(p.caption||'')}" ${brokenImgAttr()} class="${selectedHeroThumbIds.includes(p.id)?'selected':''}">`).join('');
   el.querySelectorAll('img').forEach(img => img.addEventListener('click', ()=>{
     const id = img.dataset.id;
     const i = selectedHeroThumbIds.indexOf(id);
@@ -1339,7 +1719,7 @@ function renderHeroThumbsPicker(){
 function renderAboutImagePicker(){
   const el = $('aboutImagePicker');
   if(photosCache.length === 0){ el.innerHTML = '<p style="font-size:12.5px; color:var(--ink-soft);">Upload photos in the Gallery tab first.</p>'; return; }
-  el.innerHTML = photosCache.map(p => `<img src="${p.image}" data-id="${p.id}" alt="${esc(p.caption||'')}" ${brokenImgAttr()} class="${p.id===selectedAboutImageId?'selected':''}">`).join('');
+  el.innerHTML = photosCache.map(p => `<img src="${p.thumb || p.image}" data-id="${p.id}" alt="${esc(p.caption||'')}" ${brokenImgAttr()} class="${p.id===selectedAboutImageId?'selected':''}">`).join('');
   el.querySelectorAll('img').forEach(img => img.addEventListener('click', ()=>{
     selectedAboutImageId = img.dataset.id;
     renderAboutImagePicker();
@@ -1409,13 +1789,14 @@ $('saveSettingsBtn').addEventListener('click', ()=> withBusyButton($('saveSettin
 /* ============ Gallery management ============ */
 function renderDashGalleryGrid(){
   const el = $('dashGalleryGrid');
+  backfillThumbs(PHOTOS, photosCache); // fire-and-forget; no-ops once everything has a thumb
   if(photosCache.length === 0){
     el.innerHTML = '<div class="empty-state"><span class="eyebrow">No photos yet</span><p>Upload your first photo above.</p></div>';
     return;
   }
   el.innerHTML = photosCache.map((p, i) => `
     <div class="dash-photo-tile" data-id="${p.id}">
-      <img src="${p.image}" alt="${esc(p.caption||'')}" ${brokenImgAttr()}>
+      <img src="${p.thumb || p.image}" alt="${esc(p.caption||'')}" ${brokenImgAttr()}>
       <div class="tile-flags">
         ${p.isFeatured ? '<span class="flag-badge">Featured</span>' : ''}
         ${p.showOnHome ? '<span class="flag-badge">Home</span>' : ''}
@@ -1428,6 +1809,7 @@ function renderDashGalleryGrid(){
         <button class="tile-btn" data-act="delete" title="Delete">×</button>
       </div>
       <input type="text" class="dash-caption-input" data-id="${p.id}" placeholder="Caption..." value="${esc(p.caption||'')}">
+      <input type="date" class="dash-date-input" data-id="${p.id}" value="${p.photoDate||''}" title="Photo date — used by any Moment made from this photo">
     </div>`).join('');
 
   el.querySelectorAll('.dash-photo-tile').forEach((tile, i) => {
@@ -1438,6 +1820,7 @@ function renderDashGalleryGrid(){
     tile.querySelector('[data-act=home]').addEventListener('click', ()=> togglePhotoFlag(id, 'showOnHome'));
     tile.querySelector('[data-act=delete]').addEventListener('click', ()=> deletePhoto(id));
     tile.querySelector('.dash-caption-input').addEventListener('change', (e)=> updatePhotoCaption(id, e.target.value));
+    tile.querySelector('.dash-date-input').addEventListener('change', (e)=> updatePhotoDate(id, e.target.value));
   });
 }
 
@@ -1472,9 +1855,19 @@ async function updatePhotoCaption(id, caption){
     showToast('Caption saved', 'success');
   }catch(e){ showToast('Could not save caption', 'error'); }
 }
-/* Best-effort cleanup placeholder — kept as a no-op. Photos are stored as
-   base64 data URLs directly in the Firestore document, so there's no separate
-   file in Storage to clean up; deleting the document is enough. */
+async function updatePhotoDate(id, dateStr){
+  try{
+    await PHOTOS.doc(id).update({ photoDate: dateStr || '' });
+    await loadPhotos();
+    renderPublicSite();
+    renderDashMomentsList(); // any Moment built from this photo shows the new date as its default
+    showToast('Date saved', 'success');
+  }catch(e){ showToast('Could not save date', 'error'); }
+}
+/* Best-effort cleanup placeholder — kept as a no-op. Photos/wallpapers are
+   stored as base64 data URLs directly inside their Firestore document, so
+   there's no separate file in Storage to clean up; deleting the document is
+   enough. */
 function deleteStorageFileIfApplicable(imageUrl){
   /* no-op: base64 images live inside the Firestore document itself */
 }
@@ -1512,10 +1905,10 @@ async function uploadAsBackground(dropId, inputId, onDone){
   drop.dataset.busy = '1';
   drop.textContent = 'Uploading…';
   try{
-    const { dataUrl, width, height } = await fileToCompressed(file, 1400, 0.85);
+    const { dataUrl, width, height, thumb, thumbV } = await fileToCompressed(file, 1300, 0.85);
     let maxOrder = photosCache.reduce((m,p)=> Math.max(m, p.sortOrder ?? 0), 0);
     const ref = await withTimeout(PHOTOS.add({
-      image: dataUrl, caption: '', width, height,
+      image: dataUrl, thumb, thumbV, caption: '', width, height,
       isFeatured: false, showOnHome: false, sortOrder: maxOrder + 1,
       createdAt: Date.now()
     }), 20000, 'photo-save');
@@ -1570,10 +1963,10 @@ $('galleryFileInput').addEventListener('change', async ()=>{
   let failCount = 0;
   for(const file of files){
     try{
-      const { dataUrl, width, height } = await fileToCompressed(file, 1300, 0.82);
+      const { dataUrl, width, height, thumb, thumbV } = await fileToCompressed(file, 1200, 0.85);
       maxOrder += 1;
       await withTimeout(PHOTOS.add({
-        image: dataUrl, caption: '', width, height,
+        image: dataUrl, thumb, thumbV, caption: '', width, height,
         isFeatured: false, showOnHome: false, sortOrder: maxOrder,
         createdAt: Date.now()
       }), 20000, 'photo-save');
@@ -1596,7 +1989,7 @@ $('galleryFileInput').addEventListener('change', async ()=>{
 function renderMomentAddPicker(){
   const el = $('momentAddPicker');
   if(photosCache.length === 0){ el.innerHTML = '<p style="font-size:12.5px; color:var(--ink-soft);">Upload photos in the Gallery tab first.</p>'; return; }
-  el.innerHTML = photosCache.map(p => `<img src="${p.image}" data-id="${p.id}" alt="${esc(p.caption||'')}" ${brokenImgAttr()}>`).join('');
+  el.innerHTML = photosCache.map(p => `<img src="${p.thumb || p.image}" data-id="${p.id}" alt="${esc(p.caption||'')}" ${brokenImgAttr()}>`).join('');
   el.querySelectorAll('img').forEach(img => img.addEventListener('click', async ()=>{
     const id = img.dataset.id;
     let maxOrder = momentsCache.reduce((m,x)=> Math.max(m, x.sortOrder ?? 0), 0);
@@ -1614,12 +2007,22 @@ function renderDashMomentsList(){
   if(momentsCache.length === 0){ el.innerHTML = '<div class="empty-state"><span class="eyebrow">No moments yet</span><p>Pick a photo above to add one.</p></div>'; return; }
   el.innerHTML = momentsCache.map(m => {
     const p = photoById(m.photoId);
+    const photoDate = (p && p.photoDate) || '';
+    const hasOverride = !!m.dateOverride;
+    const dateValue = hasOverride ? m.dateOverride : photoDate;
     return `
     <div class="dash-list-row" data-id="${m.id}">
-      ${p ? `<img src="${p.image}" alt="${esc(m.title||'')}" ${brokenImgAttr()}>` : `<div style="width:60px;height:60px;flex-shrink:0;background:var(--card);"></div>`}
+      ${p ? `<img src="${p.thumb || p.image}" alt="${esc(m.title||'')}" ${brokenImgAttr()}>` : `<div style="width:60px;height:60px;flex-shrink:0;background:var(--card);"></div>`}
       <div class="row-fields">
         <input type="text" class="m-title" placeholder="Title" value="${esc(m.title||'')}">
         <input type="text" class="m-caption" placeholder="Caption" value="${esc(m.caption||'')}">
+        <div class="m-date-row">
+          <input type="date" class="m-date" value="${dateValue}">
+          ${hasOverride ? `<button type="button" class="m-date-reset" data-act="reset-date" title="Go back to using the photo's date">${photoDate ? `Use photo's date (${esc(formatMomentDate(photoDate))})` : 'Clear custom date'}</button>` : ''}
+        </div>
+        ${hasOverride ? `<span class="m-date-hint">Custom date for this moment only.${photoDate ? ` This photo's own date in Gallery is ${esc(formatMomentDate(photoDate))}.` : ' This photo has no date set in Gallery yet.'}</span>` : ''}
+        ${!hasOverride && photoDate ? `<span class="m-date-hint">Following this photo's date from Gallery (${esc(formatMomentDate(photoDate))}). Edit above to set a different date for just this moment.</span>` : ''}
+        ${!hasOverride && !photoDate ? `<span class="m-date-hint">This photo has no date set in Gallery yet — set one there (it'll appear here automatically), or pick a date above just for this moment.</span>` : ''}
       </div>
       <button class="btn-small" data-act="up">↑</button>
       <button class="btn-small" data-act="down">↓</button>
@@ -1630,6 +2033,17 @@ function renderDashMomentsList(){
     const id = row.dataset.id;
     row.querySelector('.m-title').addEventListener('change', (e)=> MOMENTS.doc(id).update({title: e.target.value.trim()}).then(()=>{loadMoments().then(renderPublicSite); showToast('Saved','success');}));
     row.querySelector('.m-caption').addEventListener('change', (e)=> MOMENTS.doc(id).update({caption: e.target.value.trim()}).then(()=>{loadMoments().then(renderPublicSite); showToast('Saved','success');}));
+    row.querySelector('.m-date').addEventListener('change', (e)=>{
+      MOMENTS.doc(id).update({ dateOverride: e.target.value || '' })
+        .then(()=> loadMoments()).then(()=>{ renderPublicSite(); renderDashMomentsList(); showToast('Date saved', 'success'); })
+        .catch(()=> showToast('Could not save date', 'error'));
+    });
+    const resetBtn = row.querySelector('[data-act=reset-date]');
+    if(resetBtn) resetBtn.addEventListener('click', ()=>{
+      MOMENTS.doc(id).update({ dateOverride: '' })
+        .then(()=> loadMoments()).then(()=>{ renderPublicSite(); renderDashMomentsList(); showToast('Reverted to photo date', 'success'); })
+        .catch(()=> showToast('Could not update date', 'error'));
+    });
     row.querySelector('[data-act=delete]').addEventListener('click', async (e)=>{
       if(!confirm('Remove this moment?')) return;
       const btn = e.target;
@@ -1678,9 +2092,19 @@ $('wallpaperFileInput').addEventListener('change', async ()=>{
   drop.dataset.busy = '1';
   drop.textContent = 'Uploading…';
   try{
-    const { dataUrl } = await fileToCompressed(file, 1600, 0.8);
+    /* 1600px @ quality 0.8 was too ambitious for the 780,000-byte cap on
+       most wallpaper-style images (skies, gradients, portrait aspect
+       ratios) — it was routinely tripping the step-down loop in
+       compressImageToLimit, which is what made wallpapers look
+       noticeably soft/blocky. 1200px @ quality 0.87 fits comfortably
+       under the cap on the first pass for the vast majority of images, so
+       the loop rarely has to kick in at all. This only affects wallpapers
+       uploaded from now on — an already-uploaded wallpaper that looks
+       soft was compressed at the old settings and can't be sharpened
+       after the fact; re-uploading the original file is the fix for those. */
+    const { dataUrl, thumb, thumbV } = await fileToCompressed(file, 1200, 0.87);
     let maxOrder = wallpapersCache.reduce((m,w)=> Math.max(m, w.sortOrder ?? 0), 0);
-    await withTimeout(WALLPAPERS.add({ image: dataUrl, title:'', description:'', sortOrder: maxOrder + 1, createdAt: Date.now() }), 20000, 'wallpaper-save');
+    await withTimeout(WALLPAPERS.add({ image: dataUrl, thumb, thumbV, title:'', description:'', sortOrder: maxOrder + 1, createdAt: Date.now() }), 20000, 'wallpaper-save');
     $('wallpaperFileInput').value = '';
     await loadWallpapers();
     renderDashWallpaperList();
@@ -1701,10 +2125,11 @@ $('wallpaperFileInput').addEventListener('change', async ()=>{
 });
 function renderDashWallpaperList(){
   const el = $('dashWallpaperList');
+  backfillThumbs(WALLPAPERS, wallpapersCache); // fire-and-forget; no-ops once everything has a thumb
   if(wallpapersCache.length === 0){ el.innerHTML = '<div class="empty-state"><span class="eyebrow">No wallpapers yet</span><p>Upload one above.</p></div>'; return; }
   el.innerHTML = wallpapersCache.map(w => `
     <div class="dash-list-row" data-id="${w.id}">
-      <img src="${w.image}" alt="${esc(w.title||'')}" ${brokenImgAttr()}>
+      <img src="${w.thumb || w.image}" alt="${esc(w.title||'')}" ${brokenImgAttr()}>
       <div class="row-fields">
         <input type="text" class="w-title" placeholder="Title" value="${esc(w.title||'')}">
         <input type="text" class="w-desc" placeholder="Description" value="${esc(w.description||'')}">
