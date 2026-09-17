@@ -410,7 +410,6 @@ footer{border-top:1px solid var(--line); padding:34px 0; margin-top:20px;}
 .footer-instagram .ig-badge svg{width:16px; height:16px; fill:none; stroke:currentColor; stroke-width:1.6;}
 .footer-instagram .ig-badge svg .ig-dot{fill:currentColor; stroke:none;}
 .footer-instagram .ig-handle{font-size:12px; letter-spacing:0.4px; white-space:nowrap;}
-@media(max-width:480px){ .footer-instagram .ig-handle{display:none;} }
 .site-credit{
   text-align:center; font-size:11px; letter-spacing:0.5px; color:var(--ink-soft);
   opacity:0.6; margin-top:22px; padding-top:18px; border-top:1px solid var(--line);
@@ -895,12 +894,48 @@ let siteSettings = {};
 /* Gallery pagination state — see loadPhotos()/loadMoreGalleryPhotos() below.
    Public visitors only load photos a page at a time; galleryFullyLoaded
    becomes true once the Owner unlocks the Dashboard (which always needs the
-   complete set) or once "Load more" has reached the end. */
-const GALLERY_PAGE_SIZE = 30;
+   complete set) or once every page has been fetched.
+
+   Page sizes, on purpose:
+   - INITIAL_GALLERY_PAGE_SIZE (5) is the ONLY set of Gallery photos that
+     blocks the very first paint — kept small so the site opens fast no
+     matter how many photos exist in total. Together with the single Hero
+     photo (see loadPhotos), this is the entire blocking image payload of
+     the first paint.
+   - GALLERY_STREAM_SIZE (1) is used for every page AFTER the first, in the
+     background: photos arrive ONE AT A TIME, each one appended to the grid
+     the moment it lands, with a short breath (STREAM_GAP_MS) in between, so
+     a slow connection is never saturated by one big burst and the page
+     stays smooth and responsive the whole time it fills in.
+   - GALLERY_PAGE_SIZE is what a manual "Load more" click fetches — a click
+     is an explicit "give me more now", so it isn't drip-fed.
+   Changing any of these numbers only changes batch sizes/timing — it can
+   never by itself make a photo fail to load, since loadMoreGalleryPhotos()
+   keeps paging with galleryLastDoc until galleryHasMore is false regardless
+   of the size of each page. Image quality is untouched by all of this:
+   exactly the same stored image/thumb data is used, only the moment it is
+   fetched changes. */
+const INITIAL_GALLERY_PAGE_SIZE = 5;
+const GALLERY_STREAM_SIZE = 1;
+const GALLERY_PAGE_SIZE = 12;
+const STREAM_GAP_MS = 220;
 let galleryLastDoc = null;
 let galleryHasMore = false;
 let galleryLoadingMore = false;
 let galleryFullyLoaded = false;
+/* Guards the background streamer below so at most one is ever running —
+   loadAll() can run again (e.g. the "Retry" button after a failed first
+   load), and without this a second loop could start alongside one already
+   in progress. */
+let galleryAutoLoadRunning = false;
+/* Photos that a specific slot needs (Hero thumbnails, the About image, each
+   Moment's photo) but which weren't part of the first 5-photo page. They are
+   NOT fetched before the first paint any more — that is what used to make
+   opening the site slow, since every one of those is a full-size image. They
+   are streamed in one at a time right after the page is on screen, in the
+   order a visitor actually meets them down the page, and each one drops into
+   its own slot with no re-render of anything already visible. */
+let deferredPhotoIds = [];
 let selectedHeroMainId = null;
 let selectedHeroThumbIds = [];
 let selectedAboutImageId = null;
@@ -1126,28 +1161,52 @@ function sortByOrderThenCreated(list){
    single one of them — everything is still there, just fetched a page at a
    time. The Owner always gets the complete set (see loadAllPhotosForAdmin),
    since managing the Gallery needs every photo at once. */
+/* Note: this no longer has an "if the Owner is logged in, fetch everything"
+   shortcut. That shortcut was the real reason the site still opened slowly
+   for you: a logged-in Owner's session is restored from the browser while
+   the page is still loading, so `unlocked` was already true by the time this
+   ran, and the very first thing the page did was download the ENTIRE photo
+   collection in one request — before showing anything. The Owner now opens
+   the site exactly as fast as any visitor, on the same 5 photos. The
+   complete set the Dashboard needs is fetched when the Dashboard is actually
+   opened (see openOwnerDashboard), which is the only place it's needed. */
 async function loadPhotos(){
-  if(unlocked) return loadAllPhotosForAdmin();
-
-  const wantedIds = new Set();
-  if(homeSettings.heroImageId) wantedIds.add(homeSettings.heroImageId);
-  if(Array.isArray(homeSettings.heroThumbIds)) homeSettings.heroThumbIds.forEach(id => wantedIds.add(id));
-  if(aboutSettings.imageId) wantedIds.add(aboutSettings.imageId);
-  momentsCache.forEach(m => { if(m.photoId) wantedIds.add(m.photoId); });
-
-  const pageSnap = await PHOTOS.orderBy('sortOrder', 'asc').limit(GALLERY_PAGE_SIZE).get();
+  const pageSnap = await PHOTOS.orderBy('sortOrder', 'asc').limit(INITIAL_GALLERY_PAGE_SIZE).get();
   const byId = {};
   pageSnap.docs.forEach(d => byId[d.id] = { id: d.id, ...d.data() });
 
-  const missingIds = Array.from(wantedIds).filter(id => !byId[id]);
-  if(missingIds.length){
-    const extraDocs = await Promise.all(missingIds.map(id => PHOTOS.doc(id).get().catch(()=>null)));
-    extraDocs.forEach(d => { if(d && d.exists) byId[d.id] = { id: d.id, ...d.data() }; });
+  /* The ONE extra photo worth waiting for: the Hero's main image. It is the
+     first thing on screen, so loading it with the page (instead of after)
+     is what keeps the opening frame looking finished rather than blank.
+     Everything else that used to be fetched here — Hero thumbnails, the
+     About image, every Moment's photo — is deferred to the background
+     streamer below, because each of those is a full-size image and waiting
+     for all of them is exactly what made the first open slow. */
+  if(homeSettings.heroImageId && !byId[homeSettings.heroImageId]){
+    const heroDoc = await PHOTOS.doc(homeSettings.heroImageId).get().catch(()=>null);
+    if(heroDoc && heroDoc.exists) byId[heroDoc.id] = { id: heroDoc.id, ...heroDoc.data() };
   }
 
   photosCache = sortByOrderThenCreated(Object.values(byId));
+
+  /* Build the deferred queue in the order a visitor scrolls past them, so
+     what's nearest the top fills in first. Ids already in hand are skipped,
+     and duplicates (the same photo used by two Moments, say) are collapsed
+     so nothing is ever fetched twice. */
+  const have = new Set(photosCache.map(p => p.id));
+  const queue = [];
+  const queuePhoto = (id)=>{ if(id && !have.has(id) && queue.indexOf(id) === -1) queue.push(id); };
+  if(Array.isArray(homeSettings.heroThumbIds)) homeSettings.heroThumbIds.forEach(queuePhoto);
+  queuePhoto(aboutSettings.imageId);
+  momentsCache.forEach(m => queuePhoto(m.photoId));
+  deferredPhotoIds = queue;
+  // galleryLastDoc/galleryHasMore must be based on the raw first-page query
+  // (pageSnap), NOT on photosCache — photosCache can contain a few extra
+  // "wanted" photos (Hero/About/Moments picks) merged in above that live
+  // outside this first page, and counting those would throw off both the
+  // cursor for page 2 and the "is there more?" check below.
   galleryLastDoc = pageSnap.docs.length ? pageSnap.docs[pageSnap.docs.length - 1] : null;
-  galleryHasMore = pageSnap.docs.length === GALLERY_PAGE_SIZE;
+  galleryHasMore = pageSnap.docs.length === INITIAL_GALLERY_PAGE_SIZE;
   galleryFullyLoaded = false;
 }
 /* The Dashboard needs every photo at once — reordering, deleting, and
@@ -1160,6 +1219,10 @@ async function loadAllPhotosForAdmin(){
   photosCache = sortByOrderThenCreated(snap.docs.map(d => ({ id: d.id, ...d.data() })));
   galleryHasMore = false;
   galleryFullyLoaded = true;
+  // Everything is in hand now, so the background stream has nothing left to
+  // fetch; clearing this stops it on its next turn instead of re-requesting
+  // documents that are already loaded.
+  deferredPhotoIds = [];
   // Self-heals the public "X+ photos" counter (computeMilestoneLabel) if it
   // ever drifts from the real count — cheap, since the full count is
   // already in hand here.
@@ -1202,22 +1265,154 @@ async function backfillMissingSortOrder(){
    same order and appends it, rather than re-fetching everything already
    shown. Safely does nothing if there's no more to load, a fetch is already
    in flight, or the Owner already has the complete set loaded. */
-async function loadMoreGalleryPhotos(){
-  if(galleryFullyLoaded || !galleryHasMore || galleryLoadingMore || !galleryLastDoc) return;
+async function loadMoreGalleryPhotos(pageSize){
+  const size = pageSize || GALLERY_PAGE_SIZE;
+  if(galleryFullyLoaded || !galleryHasMore || galleryLoadingMore || !galleryLastDoc) return false;
   galleryLoadingMore = true;
-  renderPublicSite();
+  updateGalleryLoadMoreUi();
+  let ok = false;
   try{
-    const snap = await PHOTOS.orderBy('sortOrder', 'asc').startAfter(galleryLastDoc).limit(GALLERY_PAGE_SIZE).get();
+    const snap = await PHOTOS.orderBy('sortOrder', 'asc').startAfter(galleryLastDoc).limit(size).get();
+    // The Dashboard may have loaded the complete set while this page was in
+    // flight. If so, this page is stale by definition — everything in it is
+    // already in hand — so it must not touch the cursor or flip "has more"
+    // back on, which would restart paging over photos already loaded.
+    if(galleryFullyLoaded) return false;
     const existingIds = new Set(photosCache.map(p => p.id));
-    snap.docs.forEach(d => { if(!existingIds.has(d.id)) photosCache.push({ id: d.id, ...d.data() }); });
-    photosCache = sortByOrderThenCreated(photosCache);
+    const added = [];
+    snap.docs.forEach(d => { if(!existingIds.has(d.id)) added.push({ id: d.id, ...d.data() }); });
+    if(added.length) photosCache = sortByOrderThenCreated(photosCache.concat(added));
+    // The cursor and the has-more flag come from the raw query, never from
+    // how many were actually new: a page can legitimately contain a photo
+    // already in hand (one of the deferred Hero/About/Moments picks that
+    // also lives in the Gallery), and treating that as "nothing came back"
+    // would stop paging early and leave real photos unreachable.
     galleryLastDoc = snap.docs.length ? snap.docs[snap.docs.length - 1] : galleryLastDoc;
-    galleryHasMore = snap.docs.length === GALLERY_PAGE_SIZE;
+    galleryHasMore = snap.docs.length === size;
+    onPhotosArrived(added);
+    ok = true;
   }catch(e){
     showToast('Could not load more photos', 'error');
   }finally{
     galleryLoadingMore = false;
-    renderPublicSite();
+    updateGalleryLoadMoreUi();
+  }
+  return ok;
+}
+/* A photo (or a few) just landed in photosCache: put it on screen without
+   re-rendering anything that is already there. This is what makes the
+   background fill-in invisible — no flicker, no reset animations, no
+   re-decoding of images the visitor is already looking at. */
+function onPhotosArrived(added){
+  syncGalleryGrid();
+  updateGalleryLoadMoreUi();
+  (added || []).forEach(hydratePhotoSlots);
+}
+/* Runs right after the very first (10-photo) page is on screen, so the
+   page opens fast and the rest of the Gallery then keeps filling itself
+   in, page by page, with no click needed. It reuses loadMoreGalleryPhotos()
+   exactly as the "Load more" button does — same fetch, same render, same
+   overlap/duplicate protection — so nothing about how a page is loaded
+   changes, only that it now also happens on its own.
+
+   Safe by construction for every case that matters:
+   - Never runs twice at once (galleryAutoLoadRunning), even if loadAll()
+     is re-run (e.g. the "Retry" banner).
+   - Stops itself the moment the Owner unlocks (checked fresh every loop —
+     loadAllPhotosForAdmin already fetches everything for the Dashboard, so
+     continuing here would just be a wasted, redundant fetch).
+   - Stops itself once galleryHasMore/galleryFullyLoaded say there's
+     nothing left — the normal, successful end state.
+   - Never fires two network requests at once with a manual "Load more"
+     click: loadMoreGalleryPhotos() already refuses to run again while a
+     fetch is in flight, so a click during a background page is simply a
+     no-op, not a duplicate/competing request.
+   - A failed page (offline, slow network, etc.) makes loadMoreGalleryPhotos
+     show its own toast and leaves photosCache/galleryHasMore unchanged —
+     this loop treats "nothing new arrived" as that failure signal and
+     stops quietly instead of retrying in a tight loop. The "Load more"
+     button stays in the page as the manual fallback for exactly that case,
+     so a visitor can still get the rest with one tap; it never becomes a
+     dead end.
+   - The short pause between pages keeps a large gallery from saturating a
+     slow connection in one burst, so scrolling and everything else on the
+     page stays smooth on every device while it finishes in the background. */
+function sleep(ms){ return new Promise(r => setTimeout(r, ms)); }
+
+/* Fetches one photo document, with a couple of patient retries, so a single
+   dropped request on a flaky connection doesn't silently cost a visitor a
+   Hero thumbnail or a Moment's photo. Returns null only if it truly can't
+   be had right now — never throws, so one bad id can never stop the stream
+   that follows it. */
+async function fetchPhotoDoc(id){
+  for(let attempt = 0; attempt < 3; attempt++){
+    try{
+      const d = await PHOTOS.doc(id).get();
+      return (d && d.exists) ? { id: d.id, ...d.data() } : null;
+    }catch(e){
+      if(attempt < 2) await sleep(700 * (attempt + 1));
+    }
+  }
+  return null;
+}
+
+/* The background stream. Runs once the page is already on screen and brings
+   in every remaining image ONE AT A TIME, in the order a visitor meets them:
+   first the slots that are waiting for a specific photo (Hero thumbnails →
+   About → Moments), then the rest of the Gallery, photo by photo. Each one
+   is appended the moment it arrives, with a short pause in between.
+
+   Safe by construction for every case that matters:
+   - Never runs twice at once (galleryAutoLoadRunning), even if loadAll() is
+     re-run by the "Retry" banner.
+   - Stops itself the moment the Owner unlocks (checked fresh every step) —
+     loadAllPhotosForAdmin already fetches everything for the Dashboard, so
+     continuing here would just be a wasted, duplicate fetch.
+   - Stops itself once there is genuinely nothing left (empty queue +
+     galleryHasMore/galleryFullyLoaded).
+   - Never competes with a manual "Load more" click: loadMoreGalleryPhotos()
+     refuses to run while a fetch is already in flight, so a click during a
+     streamed photo is a harmless no-op, not a second request. The click is
+     picked up again by the loop on its next turn.
+   - A failed Gallery page leaves the cursor and the cache untouched, so the
+     loop stops quietly instead of hammering a dead connection, and the
+     "Load more" button stays in the page as the manual way to resume. It
+     never becomes a dead end.
+   - A photo that no longer exists (deleted while the page is open) is
+     skipped, not retried forever, and simply leaves its slot empty exactly
+     as it does today. */
+async function autoLoadRemainingGalleryPhotos(){
+  if(galleryAutoLoadRunning) return;
+  galleryAutoLoadRunning = true;
+  try{
+    // 1) The specific photos that Hero thumbnails / About / Moments are
+    //    holding a place for — small, bounded, and nearest the top.
+    while(deferredPhotoIds.length && !galleryFullyLoaded){
+      const id = deferredPhotoIds.shift();
+      const already = photoById(id);
+      if(already){ hydratePhotoSlots(already); continue; }  // arrived via a Gallery page in the meantime
+      const p = await fetchPhotoDoc(id);
+      if(p){
+        photosCache = sortByOrderThenCreated(photosCache.concat([p]));
+        onPhotosArrived([p]);
+      }
+      await sleep(STREAM_GAP_MS);
+    }
+    // Everything on the first couple of screens is in place now, so the
+    // Wallpaper section can have the connection. Deliberately not awaited:
+    // it must never hold up the Gallery photos still to come.
+    ensureWallpapersLoaded();
+    // 2) The rest of the Gallery, one photo per request.
+    while(!galleryFullyLoaded && galleryHasMore){
+      const ok = await loadMoreGalleryPhotos(GALLERY_STREAM_SIZE);
+      if(!ok) break;  // that request failed — stop; "Load more" remains as the manual fallback
+      await sleep(STREAM_GAP_MS);
+    }
+  }finally{
+    galleryAutoLoadRunning = false;
+    // Safety net: whatever happened above — an early exit, an unlock, an
+    // unexpected error — the Wallpaper section still gets its one request.
+    ensureWallpapersLoaded();
   }
 }
 async function loadMoments(){
@@ -1227,6 +1422,10 @@ async function loadMoments(){
 async function loadWallpapers(){
   const snap = await WALLPAPERS.get();
   wallpapersCache = sortByOrderThenCreated(snap.docs.map(d => ({ id:d.id, ...d.data() })));
+  // Any successful fetch counts — including the Dashboard's own reloads after
+  // an edit — so the deferred loader below never re-downloads the collection
+  // that is already in hand.
+  wallpapersLoaded = true;
 }
 async function loadSettings(){
   const [homeDoc, aboutDoc, siteDoc] = await Promise.all([
@@ -1242,10 +1441,34 @@ async function loadSettings(){
    photos Hero/About/Moments need — instead of fetching the whole Gallery
    collection just to answer that question. Wallpaper is unrelated to any of
    this and still loads fully in parallel the whole time. */
+/* Wallpapers are their own image-heavy collection, and nothing on the first
+   screen depends on them. Fetching them at the same moment as the first
+   paint (as this used to) meant they competed for the connection with the
+   photos the visitor is actually waiting to see. Now they're pulled once the
+   page is already open — once, whoever asks first, with the flags below
+   making a second call a no-op rather than a second download. */
+let wallpapersLoaded = false;
+let wallpapersLoading = null;
+function ensureWallpapersLoaded(){
+  if(wallpapersLoaded) return Promise.resolve();
+  if(wallpapersLoading) return wallpapersLoading;
+  wallpapersLoading = loadWallpapers().then(()=>{
+    wallpapersLoaded = true;
+    renderWallpaperGrid();
+    // Only refresh the Dashboard if it is actually open in front of the
+    // Owner; rendering it against a partially loaded set would be both
+    // wasted work and a list that isn't safe to reorder from.
+    if(unlocked && $('dashOverlay').classList.contains('open')) renderDashboard();
+  }).catch(()=>{
+    // Wallpaper failing on its own must never re-trigger the retry banner
+    // over content that already loaded fine; the section just stays empty.
+  }).then(()=>{ wallpapersLoading = null; });
+  return wallpapersLoading;
+}
+
 async function loadAll(){
   const veil = $('loadVeil');
   const failBanner = $('loadFailBanner');
-  const wallpapersP = loadWallpapers();
 
   try{
     await Promise.all([loadSettings(), loadMoments()]);
@@ -1253,7 +1476,12 @@ async function loadAll(){
     failBanner.classList.remove('show');
     document.body.classList.remove('site-loading');
     renderPublicSite();
-    if(unlocked) renderDashboard();
+    // Fire-and-forget, for every visitor including the Owner: the site is
+    // already visible with its first 5 photos, so every remaining image
+    // streams itself in from here, one at a time, without holding up
+    // anything else on this page. The Dashboard is deliberately NOT rendered
+    // here — it is rendered when it's opened, on the complete set.
+    autoLoadRemainingGalleryPhotos();
   }catch(e){
     failBanner.classList.add('show');
     document.body.classList.remove('site-loading');
@@ -1262,17 +1490,22 @@ async function loadAll(){
     veil.classList.add('hidden');
   }
 
-  try{
-    await wallpapersP;
-    renderPublicSite();
-    if(unlocked) renderDashboard();
-  }catch(e){
-    // Wallpaper failing independently shouldn't re-trigger the retry banner
-    // over content that already loaded successfully above.
-  }
+  // The background stream asks for the wallpapers itself, as soon as it has
+  // finished the images nearer the top of the page. This is only the
+  // fallback for when no stream is running at all — e.g. the first load
+  // failed outright — so the section still gets its one request.
+  if(!galleryAutoLoadRunning) await ensureWallpapersLoaded();
 }
 $('loadFailRetry').addEventListener('click', loadAll);
-$('galleryLoadMoreBtn').addEventListener('click', loadMoreGalleryPhotos);
+/* Manual fallback. A click is an explicit "more, now", so it fetches a real
+   batch rather than a single photo — and then restarts the background
+   stream, which is how a visitor recovers if a dropped connection had
+   stopped it earlier. The arrow wrapper matters: passing the click Event
+   straight in would be read as a page size. */
+$('galleryLoadMoreBtn').addEventListener('click', async ()=>{
+  await loadMoreGalleryPhotos(GALLERY_PAGE_SIZE);
+  autoLoadRemainingGalleryPhotos();
+});
 
 /* Splits a brand string into a leading word and a trailing "mark" (usually the
    class number, e.g. "SENIOR 27" -> "SENIOR" / "27") so the logotype can stack
@@ -1281,6 +1514,147 @@ function splitBrandMark(str){
   const parts = (str || '').trim().split(/\s+/);
   if(parts.length < 2) return { word: str || '', mark: '' };
   return { word: parts.slice(0, -1).join(' '), mark: parts[parts.length - 1] };
+}
+
+/* ============ Incremental image slots ============
+   Everything below exists so a photo arriving in the background can be put
+   exactly where it belongs — one Gallery tile, one Hero thumbnail, one
+   About image, one Moment — without rebuilding any markup that is already
+   on screen. Same markup, same sources, same quality as a full render: the
+   only difference is that nothing the visitor is already looking at gets
+   thrown away and rebuilt. */
+
+function heroThumbImgMarkup(p){
+  return `<img src="${p.thumb || p.image}" alt="${esc(p.caption||'')}" decoding="async" ${brokenImgAttr()}>`;
+}
+function momentImgMarkup(m, p){
+  return `<img src="${p.image}" alt="${esc(m.title||'')}" loading="lazy" decoding="async" ${brokenImgAttr()}>`;
+}
+function galleryItemMarkup(p){
+  // data-id (not an index): indexes shift whenever a photo that sorts
+  // earlier arrives later, which is exactly what a background stream does.
+  // Resolving the index at click time from the id can never go stale.
+  return `<div class="g-item" data-id="${esc(p.id)}"${p.width && p.height ? ` style="aspect-ratio:${p.width}/${p.height}"` : ''}>
+        <img src="${p.thumb || p.image}" alt="${esc(p.caption||'Gallery photo')}" loading="lazy" decoding="async" ${brokenImgAttr()}>
+        ${p.caption ? `<div class="g-cap">${esc(p.caption)}</div>` : ''}
+      </div>`;
+}
+function wireGalleryItem(el){
+  el.addEventListener('click', ()=>{
+    const idx = photosCache.findIndex(p => p.id === el.dataset.id);
+    if(idx >= 0) openLightbox(idx);
+  });
+}
+function wireMomentImg(wrap){
+  if(wrap.dataset.wired === '1') return;   // never bind the same slot twice
+  wrap.dataset.wired = '1';
+  const openThisMoment = ()=>{
+    const m = momentsCache.find(mm => mm.id === wrap.dataset.momentId);
+    const p = m && photoById(m.photoId);
+    if(!p || !p.image) return;
+    openLightboxImage(p.image, (m.title || m.caption) || p.caption || '');
+  };
+  wrap.addEventListener('click', openThisMoment);
+  wrap.addEventListener('keydown', (e)=>{ if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); openThisMoment(); } });
+}
+
+/* Brings the Gallery grid in line with photosCache by only ADDING what is
+   missing, in the right position, and leaving every existing tile (and its
+   already-decoded image) exactly as it is. */
+function syncGalleryGrid(){
+  const galEl = $('galleryMasonry');
+  if(!galEl) return;
+  if(photosCache.length === 0){
+    galEl.innerHTML = '';
+    $('galleryEmpty').hidden = false;
+    return;
+  }
+  $('galleryEmpty').hidden = true;
+  const existing = new Map();
+  galEl.querySelectorAll('.g-item').forEach(n => existing.set(n.dataset.id, n));
+  const wantedIds = new Set(photosCache.map(p => p.id));
+  let prev = null;
+  photosCache.forEach(p => {
+    let node = existing.get(p.id);
+    if(!node){
+      const holder = document.createElement('div');
+      holder.innerHTML = galleryItemMarkup(p);
+      node = holder.firstElementChild;
+      wireGalleryItem(node);
+    }
+    // Position it, but only if it isn't already in the right place — moving
+    // a node that's already correct would be pointless DOM churn.
+    if(prev){
+      if(prev.nextElementSibling !== node) prev.after(node);
+    }else if(galEl.firstElementChild !== node){
+      galEl.prepend(node);
+    }
+    prev = node;
+  });
+  existing.forEach((node, id)=>{ if(!wantedIds.has(id)) node.remove(); });
+}
+
+function updateGalleryLoadMoreUi(){
+  const loadMoreBtn = $('galleryLoadMoreBtn');
+  if(!loadMoreBtn) return;
+  loadMoreBtn.hidden = !(!galleryFullyLoaded && galleryHasMore);
+  loadMoreBtn.disabled = galleryLoadingMore;
+  loadMoreBtn.textContent = galleryLoadingMore ? 'Loading…' : 'Load more photos';
+}
+
+/* Drops a freshly arrived photo into whichever fixed slots were waiting for
+   it. Every branch checks the slot is actually still empty first, so this is
+   safe to call twice for the same photo and safe to call after a full
+   re-render has already filled things in. */
+function hydratePhotoSlots(p){
+  if(!p || !p.id) return;
+
+  // Hero thumbnails
+  document.querySelectorAll('#heroThumbs .thumb').forEach(slot => {
+    if(slot.dataset.photoId === p.id && !slot.firstElementChild){
+      slot.innerHTML = heroThumbImgMarkup(p);
+    }
+  });
+
+  // Hero main photo (only if it somehow wasn't loaded with the page)
+  if(homeSettings.heroImageId === p.id){
+    const heroMainEl = $('heroPhotoMain');
+    if(heroMainEl && !heroMainEl.querySelector('img')){
+      heroMainEl.innerHTML = `<img src="${p.image}" alt="" onerror="this.closest('.hero-photo-main').innerHTML=heroFallbackMarkup();">`;
+    }
+  }
+
+  // About image
+  if(aboutSettings.imageId === p.id){
+    const aboutEl = $('aboutImage');
+    if(aboutEl && !aboutEl.querySelector('img')){
+      aboutEl.innerHTML = `<img src="${p.image}" alt="" ${brokenImgAttr()}>`;
+    }
+  }
+
+  // Moments: the photo, and the date, which is read off the photo itself
+  // (photo.photoDate) unless the Moment overrides it — so it is filled in at
+  // the same instant as the image, never left showing a wrong date.
+  momentsCache.forEach(m => {
+    if(m.photoId !== p.id) return;
+    document.querySelectorAll('#momentsList .moment-img').forEach(wrap => {
+      if(wrap.dataset.momentKey !== m.id) return;
+      if(p.image && !wrap.querySelector('img')){
+        wrap.innerHTML = momentImgMarkup(m, p);
+        wrap.dataset.momentId = m.id;
+        wrap.setAttribute('role', 'button');
+        wrap.setAttribute('tabindex', '0');
+        wrap.setAttribute('aria-label', 'View this photo larger');
+        wireMomentImg(wrap);
+      }
+    });
+    const dateLabel = formatMomentDate(resolveMomentDate(m, p));
+    document.querySelectorAll('#momentsList .moment-date').forEach(el => {
+      if(el.dataset.momentDateFor !== m.id) return;
+      el.textContent = dateLabel;
+      el.hidden = !dateLabel;
+    });
+  });
 }
 
 /* ============ Render public site ============ */
@@ -1314,10 +1688,14 @@ function renderPublicSite(){
 
   // Hero thumbnails are small (80×100) — the thumb is the right size for
   // them permanently, same as the Gallery/Wallpaper grids. No upgrade.
+  // The slot is rendered straight away and keeps its place (same size, same
+  // card background it already shows while an image decodes); the image
+  // itself drops into it when the background stream reaches it, so nothing
+  // above moves or jumps when it arrives.
   const thumbIds = Array.isArray(homeSettings.heroThumbIds) ? homeSettings.heroThumbIds : [];
   $('heroThumbs').innerHTML = thumbIds.map(id => {
     const p = photoById(id);
-    return p ? `<div class="thumb"><img src="${p.thumb || p.image}" alt="${esc(p.caption||'')}" ${brokenImgAttr()}></div>` : '';
+    return `<div class="thumb" data-photo-id="${esc(id)}">${p ? heroThumbImgMarkup(p) : ''}</div>`;
   }).join('');
 
   // About
@@ -1337,27 +1715,10 @@ function renderPublicSite(){
   const totalPhotoCount = (typeof siteSettings.totalPhotosCount === 'number') ? siteSettings.totalPhotosCount : photosCache.length;
   $('photoCountNum').textContent = computeMilestoneLabel(totalPhotoCount);
 
-  // Gallery masonry
-  const galEl = $('galleryMasonry');
-  if(photosCache.length === 0){
-    galEl.innerHTML = '';
-    $('galleryEmpty').hidden = false;
-  }else{
-    $('galleryEmpty').hidden = true;
-    galEl.innerHTML = photosCache.map((p,i) => `
-      <div class="g-item" data-idx="${i}"${p.width && p.height ? ` style="aspect-ratio:${p.width}/${p.height}"` : ''}>
-        <img src="${p.thumb || p.image}" alt="${esc(p.caption||'Gallery photo')}" loading="lazy" decoding="async" ${brokenImgAttr()}>
-        ${p.caption ? `<div class="g-cap">${esc(p.caption)}</div>` : ''}
-      </div>`).join('');
-    galEl.querySelectorAll('.g-item').forEach(el => {
-      el.addEventListener('click', ()=> openLightbox(parseInt(el.dataset.idx)));
-    });
-  }
-  const loadMoreBtn = $('galleryLoadMoreBtn');
-  const showLoadMore = !galleryFullyLoaded && galleryHasMore;
-  loadMoreBtn.hidden = !showLoadMore;
-  loadMoreBtn.disabled = galleryLoadingMore;
-  loadMoreBtn.textContent = galleryLoadingMore ? 'Loading…' : 'Load more photos';
+  // Gallery masonry — built (and kept up to date) photo by photo, so a full
+  // re-render here never rebuilds tiles that are already on screen.
+  syncGalleryGrid();
+  updateGalleryLoadMoreUi();
 
   // Moments
   const momEl = $('momentsList');
@@ -1371,10 +1732,10 @@ function renderPublicSite(){
       const dateLabel = formatMomentDate(resolveMomentDate(m, p));
       return `
       <div class="moment-item">
-        <div class="moment-img"${(p && p.image) ? ` data-moment-id="${m.id}" role="button" tabindex="0" aria-label="View this photo larger"` : ''}>${(p && p.image) ? `<img src="${p.image}" alt="${esc(m.title||'')}" loading="lazy" decoding="async" ${brokenImgAttr()}>` : ''}</div>
+        <div class="moment-img" data-moment-key="${esc(m.id)}"${(p && p.image) ? ` data-moment-id="${esc(m.id)}" role="button" tabindex="0" aria-label="View this photo larger"` : ''}>${(p && p.image) ? momentImgMarkup(m, p) : ''}</div>
         <div class="moment-text">
           <div class="moment-index">${String(i+1).padStart(2,'0')} / ${String(momentsCache.length).padStart(2,'0')}</div>
-          ${dateLabel ? `<div class="moment-date">${esc(dateLabel)}</div>` : ''}
+          <div class="moment-date" data-moment-date-for="${esc(m.id)}"${dateLabel ? '' : ' hidden'}>${esc(dateLabel)}</div>
           <span class="eyebrow">A Moment We Kept</span>
           <h3 class="serif">${esc(m.title || '')}</h3>
           <p>${esc(m.caption || '')}</p>
@@ -1386,20 +1747,19 @@ function renderPublicSite(){
     // the same large-view lightbox the Gallery uses — single-image mode, no
     // prev/next, since a Moment's photo isn't necessarily part of whichever
     // Gallery page happens to be loaded right now.
-    momEl.querySelectorAll('.moment-img[data-moment-id]').forEach(wrap => {
-      const openThisMoment = ()=>{
-        const m = momentsCache.find(mm => mm.id === wrap.dataset.momentId);
-        const p = m && photoById(m.photoId);
-        if(!p || !p.image) return;
-        openLightboxImage(p.image, (m.title || m.caption) || p.caption || '');
-      };
-      wrap.addEventListener('click', openThisMoment);
-      wrap.addEventListener('keydown', (e)=>{ if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); openThisMoment(); } });
-    });
+    momEl.querySelectorAll('.moment-img[data-moment-id]').forEach(wireMomentImg);
   }
 
   // Wallpapers
+  renderWallpaperGrid();
+}
+
+/* Its own renderer so the Wallpaper section can appear on its own, the
+   moment its (deferred) fetch lands, without re-rendering the Hero,
+   Gallery and Moments the visitor is already looking at. */
+function renderWallpaperGrid(){
   const wpEl = $('wallpaperGrid');
+  if(!wpEl) return;
   if(wallpapersCache.length === 0){
     wpEl.innerHTML = '';
     $('wallpaperEmpty').hidden = false;
@@ -1551,10 +1911,29 @@ function closePassModal(){
   if(passLastFocused && typeof passLastFocused.focus === 'function') passLastFocused.focus();
 }
 
+/* The Dashboard is the one place that genuinely needs every photo at once —
+   reordering swaps sortOrder between neighbours, so acting on a partial list
+   could put photos in the wrong order. So it is fetched here, on open, and
+   the overlay is only opened once it has actually arrived. If the fetch
+   fails, the Dashboard stays closed rather than opening onto an incomplete
+   list that could be reordered or deleted from by mistake. */
+async function openOwnerDashboard(){
+  if(!galleryFullyLoaded){
+    try{
+      await withBusyButton(ownerBtn, 'Loading photos…', loadAllPhotosForAdmin);
+    }catch(e){
+      showToast('Could not load your photos — check your connection and try again', 'error');
+      return;
+    }
+    renderPublicSite();   // the page behind now has the complete gallery too
+  }
+  $('dashOverlay').classList.add('open');
+  renderDashboard();
+}
+
 ownerBtn.addEventListener('click', ()=>{
   if(unlocked){
-    $('dashOverlay').classList.add('open');
-    renderDashboard();
+    openOwnerDashboard();
     return;
   }
   openPassModal();
@@ -1598,17 +1977,15 @@ $('passSubmit').addEventListener('click', async ()=>{
 });
 
 auth.onAuthStateChanged(user => {
-  const wasUnlocked = unlocked;
   unlocked = !!(user && user.uid === OWNER_UID);
   ownerBtn.textContent = unlocked ? 'Owner Dashboard' : 'Owner Login';
   ownerBtn.classList.toggle('unlocked', unlocked);
   if(!unlocked) $('dashOverlay').classList.remove('open');
-  // The public view only loads a page of photos at a time; the moment the
-  // Owner unlocks, switch to the complete set (loadPhotos() routes to
-  // loadAllPhotosForAdmin() automatically once `unlocked` is true above).
-  if(unlocked && !wasUnlocked && !galleryFullyLoaded){
-    loadPhotos().then(()=>{ renderPublicSite(); renderDashboard(); }).catch(()=>{});
-  }
+  // Deliberately does NOT fetch the whole collection here any more. Logging
+  // in (or having a session restored on page load) is not a reason to
+  // download every photo — the site the Owner is looking at is the same
+  // public page, loaded the same fast way. The complete set is fetched when
+  // the Dashboard is opened, which is the only thing that needs it.
 });
 
 $('dashCloseBtn').addEventListener('click', ()=>{
@@ -1834,45 +2211,114 @@ function renderDashGalleryGrid(){
   });
 }
 
+/* Disables every button inside a Dashboard list while a reorder is in
+   flight, so an impatient double-click on ↑/↓ can never fire a second,
+   overlapping request against a cache that the first request hasn't
+   finished updating yet (which is exactly what could make reordering look
+   like it "sometimes doesn't respond at all" — the second click was racing
+   the first). Whichever render function runs on success rebuilds the list
+   from scratch anyway, so buttons come back enabled naturally; this only
+   needs to re-enable things on the error path, where the old list stays on
+   screen. */
+function setListBusy(containerId, busy){
+  const el = $(containerId);
+  if(!el) return;
+  el.querySelectorAll('button, input').forEach(node => { node.disabled = busy; });
+}
+
+let galleryReorderBusy = false;
 async function movePhoto(id, dir){
+  if(galleryReorderBusy) return;
   const idx = photosCache.findIndex(p => p.id === id);
   const swapIdx = idx + dir;
   if(swapIdx < 0 || swapIdx >= photosCache.length) return;
   const a = photosCache[idx], b = photosCache[swapIdx];
   const aOrder = a.sortOrder ?? idx, bOrder = b.sortOrder ?? swapIdx;
+  galleryReorderBusy = true;
+  setListBusy('dashGalleryGrid', true);
   try{
-    await PHOTOS.doc(a.id).update({ sortOrder: bOrder });
-    await PHOTOS.doc(b.id).update({ sortOrder: aOrder });
-    await loadPhotos();
+    /* The two writes only ever touch a `sortOrder` number each, so they're
+       independent and safe to fire together (Promise.all) instead of one
+       after another — roughly half the round-trip time on a slow
+       connection. withTimeout means a stuck connection surfaces a clear
+       error instead of leaving the buttons looking frozen forever. */
+    await withTimeout(Promise.all([
+      PHOTOS.doc(a.id).update({ sortOrder: bOrder }),
+      PHOTOS.doc(b.id).update({ sortOrder: aOrder })
+    ]), 15000, 'photo-reorder');
+    /* Update the already-in-memory cache directly instead of re-fetching the
+       whole collection. Each photo document can carry close to 1MB of
+       base64 image+thumb data, so loadPhotos()/loadAllPhotosForAdmin()
+       re-downloading every single photo just to reflect a 2-item swap was
+       the actual cause of reordering feeling slow or stuck — not the writes
+       themselves, which are tiny. */
+    a.sortOrder = bOrder; b.sortOrder = aOrder;
+    photosCache = sortByOrderThenCreated(photosCache);
     renderDashGalleryGrid();
     renderPublicSite();
-  }catch(e){ showToast('Could not reorder', 'error'); }
+  }catch(e){
+    showToast(
+      e && String(e.message).startsWith('timeout')
+        ? 'Taking too long — check your connection and try again'
+        : 'Could not reorder — try again',
+      'error'
+    );
+  }finally{
+    galleryReorderBusy = false;
+    setListBusy('dashGalleryGrid', false);
+  }
 }
 async function togglePhotoFlag(id, field){
   const p = photoById(id);
+  if(!p) return;
+  const newVal = !p[field];
   try{
-    await PHOTOS.doc(id).update({ [field]: !p[field] });
-    await loadPhotos();
+    await withTimeout(PHOTOS.doc(id).update({ [field]: newVal }), 15000, 'photo-flag');
+    // Update in-memory instead of re-fetching every photo (see movePhoto
+    // above for why that reload was expensive) — this is a single boolean.
+    p[field] = newVal;
     renderDashGalleryGrid();
     renderPublicSite();
-  }catch(e){ showToast('Could not update photo', 'error'); }
+  }catch(e){
+    showToast(
+      e && String(e.message).startsWith('timeout')
+        ? 'Taking too long — check your connection and try again'
+        : 'Could not update photo', 'error'
+    );
+  }
 }
 async function updatePhotoCaption(id, caption){
+  const trimmed = caption.trim();
+  const p = photoById(id);
   try{
-    await PHOTOS.doc(id).update({ caption: caption.trim() });
-    await loadPhotos();
+    await withTimeout(PHOTOS.doc(id).update({ caption: trimmed }), 15000, 'photo-caption');
+    if(p) p.caption = trimmed;
     renderPublicSite();
     showToast('Caption saved', 'success');
-  }catch(e){ showToast('Could not save caption', 'error'); }
+  }catch(e){
+    showToast(
+      e && String(e.message).startsWith('timeout')
+        ? 'Taking too long — check your connection and try again'
+        : 'Could not save caption', 'error'
+    );
+  }
 }
 async function updatePhotoDate(id, dateStr){
+  const value = dateStr || '';
+  const p = photoById(id);
   try{
-    await PHOTOS.doc(id).update({ photoDate: dateStr || '' });
-    await loadPhotos();
+    await withTimeout(PHOTOS.doc(id).update({ photoDate: value }), 15000, 'photo-date');
+    if(p) p.photoDate = value;
     renderPublicSite();
     renderDashMomentsList(); // any Moment built from this photo shows the new date as its default
     showToast('Date saved', 'success');
-  }catch(e){ showToast('Could not save date', 'error'); }
+  }catch(e){
+    showToast(
+      e && String(e.message).startsWith('timeout')
+        ? 'Taking too long — check your connection and try again'
+        : 'Could not save date', 'error'
+    );
+  }
 }
 /* Best-effort cleanup placeholder — kept as a no-op. Photos/wallpapers are
    stored as base64 data URLs directly inside their Firestore document, so
@@ -1922,7 +2368,10 @@ async function uploadAsBackground(dropId, inputId, onDone){
       isFeatured: false, showOnHome: false, sortOrder: maxOrder + 1,
       createdAt: Date.now()
     }), 20000, 'photo-save');
-    await loadPhotos();
+    // Uploading happens inside the Dashboard, which always holds the complete
+    // set — refreshing with the paged public loader here would shrink it back
+    // to 5 photos and make reordering act on the wrong list.
+    await loadAllPhotosForAdmin();
     onDone(ref.id);
     markDashDirty();
     showToast('Photo uploaded — click Save to apply', 'success');
@@ -1983,7 +2432,10 @@ $('galleryFileInput').addEventListener('change', async ()=>{
     }catch(e){ failCount++; }
   }
   $('galleryFileInput').value = '';
-  await loadPhotos();
+  // Uploading happens inside the Dashboard, which always holds the complete
+  // set — refreshing with the paged public loader here would shrink it back
+  // to 5 photos and make reordering act on the wrong list.
+  await loadAllPhotosForAdmin();
   renderDashGalleryGrid();
   renderPublicSite();
   drop.dataset.busy = '0';
@@ -2076,17 +2528,38 @@ function renderDashMomentsList(){
     row.querySelector('[data-act=down]').addEventListener('click', ()=> moveMoment(id, 1));
   });
 }
+let momentsReorderBusy = false;
 async function moveMoment(id, dir){
+  if(momentsReorderBusy) return;
   const idx = momentsCache.findIndex(m => m.id === id);
   const swapIdx = idx + dir;
   if(swapIdx < 0 || swapIdx >= momentsCache.length) return;
   const a = momentsCache[idx], b = momentsCache[swapIdx];
   const aOrder = a.sortOrder ?? idx, bOrder = b.sortOrder ?? swapIdx;
-  await MOMENTS.doc(a.id).update({ sortOrder: bOrder });
-  await MOMENTS.doc(b.id).update({ sortOrder: aOrder });
-  await loadMoments();
-  renderDashMomentsList();
-  renderPublicSite();
+  momentsReorderBusy = true;
+  setListBusy('dashMomentsList', true);
+  try{
+    await withTimeout(Promise.all([
+      MOMENTS.doc(a.id).update({ sortOrder: bOrder }),
+      MOMENTS.doc(b.id).update({ sortOrder: aOrder })
+    ]), 15000, 'moment-reorder');
+    // Same reasoning as movePhoto above: update the in-memory cache instead
+    // of re-fetching the whole Moments collection for a simple 2-item swap.
+    a.sortOrder = bOrder; b.sortOrder = aOrder;
+    momentsCache = sortByOrderThenCreated(momentsCache);
+    renderDashMomentsList();
+    renderPublicSite();
+  }catch(e){
+    showToast(
+      e && String(e.message).startsWith('timeout')
+        ? 'Taking too long — check your connection and try again'
+        : 'Could not reorder — try again',
+      'error'
+    );
+  }finally{
+    momentsReorderBusy = false;
+    setListBusy('dashMomentsList', false);
+  }
 }
 
 /* ============ Wallpaper management ============ */
@@ -2176,17 +2649,39 @@ function renderDashWallpaperList(){
     row.querySelector('[data-act=down]').addEventListener('click', ()=> moveWallpaper(id, 1));
   });
 }
+let wallpapersReorderBusy = false;
 async function moveWallpaper(id, dir){
+  if(wallpapersReorderBusy) return;
   const idx = wallpapersCache.findIndex(w => w.id === id);
   const swapIdx = idx + dir;
   if(swapIdx < 0 || swapIdx >= wallpapersCache.length) return;
   const a = wallpapersCache[idx], b = wallpapersCache[swapIdx];
   const aOrder = a.sortOrder ?? idx, bOrder = b.sortOrder ?? swapIdx;
-  await WALLPAPERS.doc(a.id).update({ sortOrder: bOrder });
-  await WALLPAPERS.doc(b.id).update({ sortOrder: aOrder });
-  await loadWallpapers();
-  renderDashWallpaperList();
-  renderPublicSite();
+  wallpapersReorderBusy = true;
+  setListBusy('dashWallpaperList', true);
+  try{
+    await withTimeout(Promise.all([
+      WALLPAPERS.doc(a.id).update({ sortOrder: bOrder }),
+      WALLPAPERS.doc(b.id).update({ sortOrder: aOrder })
+    ]), 15000, 'wallpaper-reorder');
+    // Same reasoning as movePhoto above: wallpaper documents also carry
+    // base64 image+thumb data, so re-fetching the whole collection here was
+    // just as costly as it was for the Gallery — update in-memory instead.
+    a.sortOrder = bOrder; b.sortOrder = aOrder;
+    wallpapersCache = sortByOrderThenCreated(wallpapersCache);
+    renderDashWallpaperList();
+    renderPublicSite();
+  }catch(e){
+    showToast(
+      e && String(e.message).startsWith('timeout')
+        ? 'Taking too long — check your connection and try again'
+        : 'Could not reorder — try again',
+      'error'
+    );
+  }finally{
+    wallpapersReorderBusy = false;
+    setListBusy('dashWallpaperList', false);
+  }
 }
 
 /* ============ Init ============ */
