@@ -902,13 +902,17 @@ let siteSettings = {};
      matter how many photos exist in total. Together with the single Hero
      photo (see loadPhotos), this is the entire blocking image payload of
      the first paint.
-   - GALLERY_STREAM_SIZE (1) is used for every page AFTER the first, in the
-     background: photos arrive ONE AT A TIME, each one appended to the grid
-     the moment it lands, with a short breath (STREAM_GAP_MS) in between, so
-     a slow connection is never saturated by one big burst and the page
-     stays smooth and responsive the whole time it fills in.
-   - GALLERY_PAGE_SIZE is what a manual "Load more" click fetches — a click
-     is an explicit "give me more now", so it isn't drip-fed.
+   - GALLERY_PAGE_SIZE is every page after the first — both the one a
+     manual "Load more" click fetches, and the one the scroll-triggered
+     loader (initGalleryInfiniteScroll) fetches as a visitor nears the
+     bottom of what's loaded so far. One size for both, since they are the
+     same request through the same code path (triggerGalleryLoadMore); see
+     that function for why nothing here streams in one photo at a time any
+     more — that turned out to be the cause of a real freeze on mobile,
+     not a fix for one.
+   - STREAM_GAP_MS only paces the small, bounded set of specific photos
+     other slots are waiting for (Hero thumbnails/About/Moments) — never
+     more than a handful of items, so pacing them is harmless.
    Changing any of these numbers only changes batch sizes/timing — it can
    never by itself make a photo fail to load, since loadMoreGalleryPhotos()
    keeps paging with galleryLastDoc until galleryHasMore is false regardless
@@ -916,7 +920,6 @@ let siteSettings = {};
    exactly the same stored image/thumb data is used, only the moment it is
    fetched changes. */
 const INITIAL_GALLERY_PAGE_SIZE = 5;
-const GALLERY_STREAM_SIZE = 1;
 const GALLERY_PAGE_SIZE = 12;
 const STREAM_GAP_MS = 220;
 let galleryLastDoc = null;
@@ -1308,41 +1311,12 @@ function onPhotosArrived(added){
   updateGalleryLoadMoreUi();
   (added || []).forEach(hydratePhotoSlots);
 }
-/* Runs right after the very first (10-photo) page is on screen, so the
-   page opens fast and the rest of the Gallery then keeps filling itself
-   in, page by page, with no click needed. It reuses loadMoreGalleryPhotos()
-   exactly as the "Load more" button does — same fetch, same render, same
-   overlap/duplicate protection — so nothing about how a page is loaded
-   changes, only that it now also happens on its own.
-
-   Safe by construction for every case that matters:
-   - Never runs twice at once (galleryAutoLoadRunning), even if loadAll()
-     is re-run (e.g. the "Retry" banner).
-   - Stops itself the moment the Owner unlocks (checked fresh every loop —
-     loadAllPhotosForAdmin already fetches everything for the Dashboard, so
-     continuing here would just be a wasted, redundant fetch).
-   - Stops itself once galleryHasMore/galleryFullyLoaded say there's
-     nothing left — the normal, successful end state.
-   - Never fires two network requests at once with a manual "Load more"
-     click: loadMoreGalleryPhotos() already refuses to run again while a
-     fetch is in flight, so a click during a background page is simply a
-     no-op, not a duplicate/competing request.
-   - A failed page (offline, slow network, etc.) makes loadMoreGalleryPhotos
-     show its own toast and leaves photosCache/galleryHasMore unchanged —
-     this loop treats "nothing new arrived" as that failure signal and
-     stops quietly instead of retrying in a tight loop. The "Load more"
-     button stays in the page as the manual fallback for exactly that case,
-     so a visitor can still get the rest with one tap; it never becomes a
-     dead end.
-   - The short pause between pages keeps a large gallery from saturating a
-     slow connection in one burst, so scrolling and everything else on the
-     page stays smooth on every device while it finishes in the background. */
 function sleep(ms){ return new Promise(r => setTimeout(r, ms)); }
 
 /* Fetches one photo document, with a couple of patient retries, so a single
    dropped request on a flaky connection doesn't silently cost a visitor a
    Hero thumbnail or a Moment's photo. Returns null only if it truly can't
-   be had right now — never throws, so one bad id can never stop the stream
+   be had right now — never throws, so one bad id can never stop the loop
    that follows it. */
 async function fetchPhotoDoc(id){
   for(let attempt = 0; attempt < 3; attempt++){
@@ -1356,37 +1330,38 @@ async function fetchPhotoDoc(id){
   return null;
 }
 
-/* The background stream. Runs once the page is already on screen and brings
-   in every remaining image ONE AT A TIME, in the order a visitor meets them:
-   first the slots that are waiting for a specific photo (Hero thumbnails →
-   About → Moments), then the rest of the Gallery, photo by photo. Each one
-   is appended the moment it arrives, with a short pause in between.
+/* Runs right after the first page is on screen and fills in the small,
+   bounded set of specific photos other slots are waiting for (Hero
+   thumbnails → About → Moments) — one at a time is fine here because this
+   list is short (a handful of items, not hundreds).
+
+   The REST of the Gallery is deliberately NOT streamed in the background
+   any more (see initGalleryInfiniteScroll below for why, and what replaced
+   it): that used to mean the page kept quietly fetching one photo every
+   ~220ms for as long as the gallery had more to give, forever, regardless
+   of whether anyone was even looking at the Gallery yet. Each of those
+   fetches forces the masonry to reflow its whole multi-column layout, and
+   doing that every fraction of a second — including the whole time someone
+   is actively scrolling — is exactly what a phone's browser reads as
+   "frozen": every scroll frame was competing with a layout recalculation
+   that had nothing to do with what was on screen. Loading only when the
+   visitor scrolls near the bottom is what every normal photo feed does, and
+   it fixes this at the source rather than by tuning timers.
 
    Safe by construction for every case that matters:
    - Never runs twice at once (galleryAutoLoadRunning), even if loadAll() is
      re-run by the "Retry" banner.
-   - Stops itself the moment the Owner unlocks (checked fresh every step) —
-     loadAllPhotosForAdmin already fetches everything for the Dashboard, so
-     continuing here would just be a wasted, duplicate fetch.
-   - Stops itself once there is genuinely nothing left (empty queue +
-     galleryHasMore/galleryFullyLoaded).
-   - Never competes with a manual "Load more" click: loadMoreGalleryPhotos()
-     refuses to run while a fetch is already in flight, so a click during a
-     streamed photo is a harmless no-op, not a second request. The click is
-     picked up again by the loop on its next turn.
-   - A failed Gallery page leaves the cursor and the cache untouched, so the
-     loop stops quietly instead of hammering a dead connection, and the
-     "Load more" button stays in the page as the manual way to resume. It
-     never becomes a dead end.
+   - Stops itself once the deferred queue is genuinely empty, or once
+     galleryFullyLoaded is set (e.g. the Owner unlocked in the meantime, or
+     these ids showed up on a normal Gallery page before this loop got to
+     them).
    - A photo that no longer exists (deleted while the page is open) is
-     skipped, not retried forever, and simply leaves its slot empty exactly
-     as it does today. */
+     skipped, not retried forever, and leaves its slot empty exactly as it
+     does today. */
 async function autoLoadRemainingGalleryPhotos(){
   if(galleryAutoLoadRunning) return;
   galleryAutoLoadRunning = true;
   try{
-    // 1) The specific photos that Hero thumbnails / About / Moments are
-    //    holding a place for — small, bounded, and nearest the top.
     while(deferredPhotoIds.length && !galleryFullyLoaded){
       const id = deferredPhotoIds.shift();
       const already = photoById(id);
@@ -1398,21 +1373,49 @@ async function autoLoadRemainingGalleryPhotos(){
       }
       await sleep(STREAM_GAP_MS);
     }
-    // Everything on the first couple of screens is in place now, so the
-    // Wallpaper section can have the connection. Deliberately not awaited:
-    // it must never hold up the Gallery photos still to come.
-    ensureWallpapersLoaded();
-    // 2) The rest of the Gallery, one photo per request.
-    while(!galleryFullyLoaded && galleryHasMore){
-      const ok = await loadMoreGalleryPhotos(GALLERY_STREAM_SIZE);
-      if(!ok) break;  // that request failed — stop; "Load more" remains as the manual fallback
-      await sleep(STREAM_GAP_MS);
-    }
   }finally{
     galleryAutoLoadRunning = false;
-    // Safety net: whatever happened above — an early exit, an unlock, an
-    // unexpected error — the Wallpaper section still gets its one request.
+    // Everything on the first couple of screens is in place now (or this run
+    // had nothing to do), so it's safe to let the Wallpaper section and the
+    // Gallery's own scroll-triggered loading have the connection.
     ensureWallpapersLoaded();
+    initGalleryInfiniteScroll();
+  }
+}
+
+/* Infinite scroll for the rest of the Gallery. Instead of fetching pages on
+   a timer regardless of what's on screen, this watches the "Load more"
+   button itself and fetches the next page only once it's actually about to
+   come into view — the same button a click already uses, so there's exactly
+   one code path for "give me more photos" (see triggerGalleryLoadMore).
+   Wired once; the button is a static element in the page, never recreated,
+   so a single observe() lasts for the page's whole lifetime. */
+let galleryScrollObserver = null;
+function initGalleryInfiniteScroll(){
+  if(galleryScrollObserver) return;         // already watching
+  const btn = $('galleryLoadMoreBtn');
+  if(!btn || typeof IntersectionObserver === 'undefined') return; // manual click still works either way
+  galleryScrollObserver = new IntersectionObserver((entries)=>{
+    entries.forEach(entry => { if(entry.isIntersecting) triggerGalleryLoadMore(); });
+  }, { rootMargin: '600px 0px' });  // start the fetch a bit before the button is actually visible
+  galleryScrollObserver.observe(btn);
+}
+
+/* The one place that actually asks for the next Gallery page — used by both
+   the manual "Load more" click and the scroll observer above, so there is
+   never a second, different way this can happen. loadMoreGalleryPhotos()
+   already refuses to run twice at once, so calling this from both places at
+   the same moment is a harmless no-op on the second call, not a duplicate
+   request. After a page lands, if the button is already back on screen —
+   a short gallery on a tall phone, say — this keeps filling immediately
+   instead of waiting on a scroll event that might not come. */
+async function triggerGalleryLoadMore(){
+  const ok = await loadMoreGalleryPhotos(GALLERY_PAGE_SIZE);
+  if(!ok) return;
+  const btn = $('galleryLoadMoreBtn');
+  if(btn && !btn.hidden){
+    const r = btn.getBoundingClientRect();
+    if(r.top < (window.innerHeight || 800) + 600) return triggerGalleryLoadMore();
   }
 }
 async function loadMoments(){
@@ -1477,9 +1480,11 @@ async function loadAll(){
     document.body.classList.remove('site-loading');
     renderPublicSite();
     // Fire-and-forget, for every visitor including the Owner: the site is
-    // already visible with its first 5 photos, so every remaining image
-    // streams itself in from here, one at a time, without holding up
-    // anything else on this page. The Dashboard is deliberately NOT rendered
+    // already visible with its first 5 photos. This only fills the small,
+    // bounded set of specific photos other slots are waiting for (Hero
+    // thumbnails/About/Moments); the rest of the Gallery loads itself in as
+    // the visitor scrolls near the bottom of it (see
+    // initGalleryInfiniteScroll). The Dashboard is deliberately NOT rendered
     // here — it is rendered when it's opened, on the complete set.
     autoLoadRemainingGalleryPhotos();
   }catch(e){
@@ -1497,15 +1502,11 @@ async function loadAll(){
   if(!galleryAutoLoadRunning) await ensureWallpapersLoaded();
 }
 $('loadFailRetry').addEventListener('click', loadAll);
-/* Manual fallback. A click is an explicit "more, now", so it fetches a real
-   batch rather than a single photo — and then restarts the background
-   stream, which is how a visitor recovers if a dropped connection had
-   stopped it earlier. The arrow wrapper matters: passing the click Event
-   straight in would be read as a page size. */
-$('galleryLoadMoreBtn').addEventListener('click', async ()=>{
-  await loadMoreGalleryPhotos(GALLERY_PAGE_SIZE);
-  autoLoadRemainingGalleryPhotos();
-});
+/* Manual fallback — the same single code path the scroll-triggered loading
+   uses (see triggerGalleryLoadMore), so a click is never a second, different
+   way of asking for more photos. Also how a visitor recovers if a dropped
+   connection had stopped the scroll-triggered loading earlier. */
+$('galleryLoadMoreBtn').addEventListener('click', triggerGalleryLoadMore);
 
 /* Splits a brand string into a leading word and a trailing "mark" (usually the
    class number, e.g. "SENIOR 27" -> "SENIOR" / "27") so the logotype can stack
