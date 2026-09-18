@@ -274,8 +274,13 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
 }
 
 .view-all-row{text-align:center; margin-top:40px;}
-.gallery-load-more-wrap{text-align:center; margin-top:36px;}
-.gallery-load-more:disabled{opacity:0.6; cursor:default;}
+.gallery-sentinel{height:1px;}
+.section-spinner-wrap{display:flex; flex-direction:column; justify-content:center; align-items:center; gap:12px; padding:40px 0;}
+.gallery-spinner-wrap{display:flex; justify-content:center; align-items:center; padding:28px 0 8px; min-height:40px;}
+.section-spinner, .gallery-spinner{width:22px; height:22px; border-radius:50%; border:2px solid var(--line); border-top-color:var(--accent); animation:gallery-spin 0.8s linear infinite;}
+.section-spinner-label{font-size:12px; letter-spacing:2.5px; text-transform:uppercase; font-weight:600; color:var(--ink-soft);}
+@keyframes gallery-spin{ to{ transform:rotate(360deg); } }
+@media(prefers-reduced-motion:reduce){ .section-spinner, .gallery-spinner{animation-duration:2.4s;} }
 
 /* ---------- Moments ---------- */
 .moments-section{padding:90px 0; border-top:1px solid var(--line);}
@@ -623,8 +628,9 @@ footer{border-top:1px solid var(--line); padding:34px 0; margin-top:20px;}
       <span class="eyebrow">Gallery is empty</span>
       <p>Photos added by the Owner will appear here.</p>
     </div>
-    <div class="gallery-load-more-wrap">
-      <button type="button" id="galleryLoadMoreBtn" class="btn-outline gallery-load-more" hidden>Load more photos</button>
+    <div class="gallery-sentinel" id="galleryLoadSentinel" aria-hidden="true"></div>
+    <div class="gallery-spinner-wrap" id="gallerySpinnerWrap" hidden>
+      <div class="gallery-spinner" role="status" aria-label="Loading more photos"></div>
     </div>
   </div>
 </section>
@@ -638,6 +644,10 @@ footer{border-top:1px solid var(--line); padding:34px 0; margin-top:20px;}
       </div>
     </div>
     <div id="momentsList"></div>
+    <div id="momentsLoading" class="section-spinner-wrap" hidden>
+      <div class="section-spinner" role="status" aria-label="Loading moments"></div>
+      <span class="section-spinner-label">Loading…</span>
+    </div>
     <div id="momentsEmpty" class="empty-state" hidden>
       <span class="eyebrow">No moments yet</span>
       <p>Featured moments selected by the Owner will appear here.</p>
@@ -654,6 +664,10 @@ footer{border-top:1px solid var(--line); padding:34px 0; margin-top:20px;}
       </div>
     </div>
     <div class="wallpaper-grid" id="wallpaperGrid"></div>
+    <div id="wallpaperLoading" class="section-spinner-wrap" hidden>
+      <div class="section-spinner" role="status" aria-label="Loading wallpapers"></div>
+      <span class="section-spinner-label">Loading…</span>
+    </div>
     <div id="wallpaperEmpty" class="empty-state" hidden>
       <span class="eyebrow">No wallpapers yet</span>
       <p>Wallpapers added by the Owner will appear here.</p>
@@ -887,6 +901,12 @@ const SETTINGS = db.collection('settings');
 let unlocked = false;
 let photosCache = [];   // [{id, caption, image, width, height, isFeatured, showOnHome, sortOrder}]
 let momentsCache = [];  // [{id, photoId, title, caption, sortOrder}]
+// Distinguishes "hasn't finished loading yet" from "the Owner genuinely
+// added none" — without this, renderPublicSite can't tell those two apart
+// and a visitor who lands on the page before loadMoments() resolves would
+// briefly see "No moments yet" for a class that has plenty, purely because
+// the fetch hadn't landed. See loadMoments() / renderPublicSite().
+let momentsLoaded = false;
 let wallpapersCache = [];
 let homeSettings = {};
 let aboutSettings = {};
@@ -1267,12 +1287,18 @@ async function backfillMissingSortOrder(){
 /* "Load more" for the public Gallery grid — fetches the next page in the
    same order and appends it, rather than re-fetching everything already
    shown. Safely does nothing if there's no more to load, a fetch is already
-   in flight, or the Owner already has the complete set loaded. */
+   in flight, or the Owner already has the complete set loaded.
+
+   Deliberately silent on failure — no toast, no visible error. This is only
+   ever called from triggerGalleryLoadMore, which is the one place that
+   decides what happens next on failure (quietly retry with backoff), so a
+   visitor never sees an error message or a dead end for something as
+   ordinary as one dropped request on a spotty connection. */
 async function loadMoreGalleryPhotos(pageSize){
   const size = pageSize || GALLERY_PAGE_SIZE;
   if(galleryFullyLoaded || !galleryHasMore || galleryLoadingMore || !galleryLastDoc) return false;
   galleryLoadingMore = true;
-  updateGalleryLoadMoreUi();
+  updateGalleryLoadingIndicator();
   let ok = false;
   try{
     const snap = await PHOTOS.orderBy('sortOrder', 'asc').startAfter(galleryLastDoc).limit(size).get();
@@ -1295,10 +1321,11 @@ async function loadMoreGalleryPhotos(pageSize){
     onPhotosArrived(added);
     ok = true;
   }catch(e){
-    showToast('Could not load more photos', 'error');
+    // No toast here on purpose — see the function comment. triggerGalleryLoadMore
+    // is the one that decides to retry quietly.
   }finally{
     galleryLoadingMore = false;
-    updateGalleryLoadMoreUi();
+    updateGalleryLoadingIndicator();
   }
   return ok;
 }
@@ -1308,7 +1335,7 @@ async function loadMoreGalleryPhotos(pageSize){
    re-decoding of images the visitor is already looking at. */
 function onPhotosArrived(added){
   syncGalleryGrid();
-  updateGalleryLoadMoreUi();
+  updateGalleryLoadingIndicator();
   (added || []).forEach(hydratePhotoSlots);
 }
 function sleep(ms){ return new Promise(r => setTimeout(r, ms)); }
@@ -1383,44 +1410,117 @@ async function autoLoadRemainingGalleryPhotos(){
   }
 }
 
-/* Infinite scroll for the rest of the Gallery. Instead of fetching pages on
-   a timer regardless of what's on screen, this watches the "Load more"
-   button itself and fetches the next page only once it's actually about to
-   come into view — the same button a click already uses, so there's exactly
-   one code path for "give me more photos" (see triggerGalleryLoadMore).
-   Wired once; the button is a static element in the page, never recreated,
-   so a single observe() lasts for the page's whole lifetime. */
+/* Infinite scroll for the rest of the Gallery — no button anywhere. A 1px
+   invisible sentinel sits right after the grid; the moment a visitor
+   scrolls near it, the next page is fetched and appended, and the sentinel
+   is still there afterwards for the page after that. The sentinel is a
+   static element in the page markup, never recreated, so a single
+   observe() lasts for the page's whole lifetime — nothing to re-wire.
+
+   Self-healing on failure, with no button and no error shown, as asked:
+   - A failed page schedules a quiet retry (scheduleGalleryRetry) instead of
+     stopping and waiting for a click that no longer exists.
+   - The delay between retries doubles each time it fails again (2s → 4s →
+     8s … capped at 30s), so a real outage doesn't turn into a hammering
+     loop, but a brief blip recovers in a couple of seconds.
+   - The delay resets back to its starting point the moment a page actually
+     succeeds, so one bad request never makes the NEXT page (a while later,
+     once things are fine again) wait through a long backoff for no reason.
+   - If the sentinel has scrolled out of view by the time a retry is due,
+     the retry is skipped rather than fetching photos nobody is about to
+     see; scrolling back down fires the observer again and picks it up
+     immediately, so nothing is ever permanently stuck.
+   - The instant a dropped connection comes back (the browser's 'online'
+     event), it retries right away instead of waiting out whatever backoff
+     delay happened to be in progress. */
 let galleryScrollObserver = null;
+let gallerySentinelVisible = false;
+let galleryRetryTimer = null;
+const GALLERY_RETRY_MIN_MS = 2000;
+const GALLERY_RETRY_MAX_MS = 30000;
+let galleryRetryDelay = GALLERY_RETRY_MIN_MS;
+
 function initGalleryInfiniteScroll(){
   if(galleryScrollObserver) return;         // already watching
-  const btn = $('galleryLoadMoreBtn');
-  if(!btn || typeof IntersectionObserver === 'undefined') return; // manual click still works either way
+  const sentinel = $('galleryLoadSentinel');
+  if(!sentinel || typeof IntersectionObserver === 'undefined'){
+    // No IntersectionObserver in this browser (very old / unusual): fall
+    // back to loading the rest right away rather than leaving a visitor
+    // with no way at all to see the rest of the Gallery.
+    autoFillGalleryWithoutObserver();
+    return;
+  }
   galleryScrollObserver = new IntersectionObserver((entries)=>{
-    entries.forEach(entry => { if(entry.isIntersecting) triggerGalleryLoadMore(); });
-  }, { rootMargin: '600px 0px' });  // start the fetch a bit before the button is actually visible
-  galleryScrollObserver.observe(btn);
+    entries.forEach(entry => {
+      gallerySentinelVisible = entry.isIntersecting;
+      if(entry.isIntersecting) triggerGalleryLoadMore();
+    });
+  }, { rootMargin: '600px 0px' });  // start the fetch a bit before the sentinel is actually visible
+  galleryScrollObserver.observe(sentinel);
+}
+/* Fallback for the rare browser with no IntersectionObserver at all: pages
+   itself through the whole remaining Gallery once, patiently, with the same
+   retry-on-failure backoff as the normal path, just without ever needing to
+   know where the sentinel is on screen. */
+async function autoFillGalleryWithoutObserver(){
+  while(!galleryFullyLoaded && galleryHasMore){
+    const ok = await loadMoreGalleryPhotos(GALLERY_PAGE_SIZE);
+    if(ok){ galleryRetryDelay = GALLERY_RETRY_MIN_MS; continue; }
+    await sleep(galleryRetryDelay);
+    galleryRetryDelay = Math.min(galleryRetryDelay * 2, GALLERY_RETRY_MAX_MS);
+  }
 }
 
 /* The one place that actually asks for the next Gallery page — used by both
-   the manual "Load more" click and the scroll observer above, so there is
+   the scroll observer above and the online-again handler below, so there is
    never a second, different way this can happen. loadMoreGalleryPhotos()
-   already refuses to run twice at once, so calling this from both places at
+   already refuses to run twice at once, so calling this from two places at
    the same moment is a harmless no-op on the second call, not a duplicate
-   request. After a page lands, if the button is already back on screen —
+   request. After a page lands, if the sentinel is already back on screen —
    a short gallery on a tall phone, say — this keeps filling immediately
    instead of waiting on a scroll event that might not come. */
 async function triggerGalleryLoadMore(){
+  if(galleryFullyLoaded || !galleryHasMore || galleryLoadingMore) return;
   const ok = await loadMoreGalleryPhotos(GALLERY_PAGE_SIZE);
-  if(!ok) return;
-  const btn = $('galleryLoadMoreBtn');
-  if(btn && !btn.hidden){
-    const r = btn.getBoundingClientRect();
-    if(r.top < (window.innerHeight || 800) + 600) return triggerGalleryLoadMore();
+  if(!ok){
+    scheduleGalleryRetry();
+    return;
   }
+  galleryRetryDelay = GALLERY_RETRY_MIN_MS;  // that page worked — any future failure starts the backoff fresh
+  if(galleryFullyLoaded || !galleryHasMore) return;
+  const sentinel = $('galleryLoadSentinel');
+  if(sentinel && sentinelNearViewport(sentinel)) return triggerGalleryLoadMore();
 }
+
+function sentinelNearViewport(sentinel){
+  const r = sentinel.getBoundingClientRect();
+  return r.top < (window.innerHeight || 800) + 600;
+}
+
+function scheduleGalleryRetry(){
+  if(galleryRetryTimer || galleryFullyLoaded || !galleryHasMore) return;
+  const delay = galleryRetryDelay;
+  galleryRetryDelay = Math.min(galleryRetryDelay * 2, GALLERY_RETRY_MAX_MS);
+  galleryRetryTimer = setTimeout(()=>{
+    galleryRetryTimer = null;
+    if(gallerySentinelVisible) triggerGalleryLoadMore();
+    // else: nothing to do right now — scrolling the sentinel back into view
+    // fires the IntersectionObserver again and picks this straight back up.
+  }, delay);
+}
+
+// The instant a dropped connection comes back, retry immediately instead of
+// waiting out whatever backoff delay happened to be in progress.
+window.addEventListener('online', ()=>{
+  if(galleryFullyLoaded || !galleryHasMore) return;
+  if(galleryRetryTimer){ clearTimeout(galleryRetryTimer); galleryRetryTimer = null; }
+  galleryRetryDelay = GALLERY_RETRY_MIN_MS;
+  if(gallerySentinelVisible) triggerGalleryLoadMore();
+});
 async function loadMoments(){
   const snap = await MOMENTS.get();
   momentsCache = sortByOrderThenCreated(snap.docs.map(d => ({ id:d.id, ...d.data() })));
+  momentsLoaded = true;
 }
 async function loadWallpapers(){
   const snap = await WALLPAPERS.get();
@@ -1452,22 +1552,35 @@ async function loadSettings(){
    making a second call a no-op rather than a second download. */
 let wallpapersLoaded = false;
 let wallpapersLoading = null;
+let wallpapersRetryDelay = GALLERY_RETRY_MIN_MS;
+const WALLPAPERS_RETRY_MAX_MS = 30000;
 function ensureWallpapersLoaded(){
   if(wallpapersLoaded) return Promise.resolve();
   if(wallpapersLoading) return wallpapersLoading;
   wallpapersLoading = loadWallpapers().then(()=>{
     wallpapersLoaded = true;
+    wallpapersRetryDelay = GALLERY_RETRY_MIN_MS;  // reset backoff for any future reload
     renderWallpaperGrid();
     // Only refresh the Dashboard if it is actually open in front of the
     // Owner; rendering it against a partially loaded set would be both
     // wasted work and a list that isn't safe to reorder from.
     if(unlocked && $('dashOverlay').classList.contains('open')) renderDashboard();
   }).catch(()=>{
-    // Wallpaper failing on its own must never re-trigger the retry banner
-    // over content that already loaded fine; the section just stays empty.
+    // Self-healing, exactly like the Gallery's scroll-triggered loading: no
+    // visible error, just a quiet retry with the same doubling backoff, so
+    // one dropped request never leaves the section stuck on "Loading…"
+    // forever with nothing watching it.
+    const delay = wallpapersRetryDelay;
+    wallpapersRetryDelay = Math.min(wallpapersRetryDelay * 2, WALLPAPERS_RETRY_MAX_MS);
+    setTimeout(ensureWallpapersLoaded, delay);
   }).then(()=>{ wallpapersLoading = null; });
   return wallpapersLoading;
 }
+// The instant a dropped connection comes back, retry right away instead of
+// waiting out whatever backoff delay happened to be in progress.
+window.addEventListener('online', ()=>{
+  if(!wallpapersLoaded){ wallpapersRetryDelay = GALLERY_RETRY_MIN_MS; ensureWallpapersLoaded(); }
+});
 
 async function loadAll(){
   const veil = $('loadVeil');
@@ -1502,11 +1615,9 @@ async function loadAll(){
   if(!galleryAutoLoadRunning) await ensureWallpapersLoaded();
 }
 $('loadFailRetry').addEventListener('click', loadAll);
-/* Manual fallback — the same single code path the scroll-triggered loading
-   uses (see triggerGalleryLoadMore), so a click is never a second, different
-   way of asking for more photos. Also how a visitor recovers if a dropped
-   connection had stopped the scroll-triggered loading earlier. */
-$('galleryLoadMoreBtn').addEventListener('click', triggerGalleryLoadMore);
+// No manual "Load more" click any more — the scroll observer
+// (initGalleryInfiniteScroll) and its own retry/backoff are the only way
+// the rest of the Gallery loads, exactly as asked: no button, self-healing.
 
 /* Splits a brand string into a leading word and a trailing "mark" (usually the
    class number, e.g. "SENIOR 27" -> "SENIOR" / "27") so the logotype can stack
@@ -1595,12 +1706,14 @@ function syncGalleryGrid(){
   existing.forEach((node, id)=>{ if(!wantedIds.has(id)) node.remove(); });
 }
 
-function updateGalleryLoadMoreUi(){
-  const loadMoreBtn = $('galleryLoadMoreBtn');
-  if(!loadMoreBtn) return;
-  loadMoreBtn.hidden = !(!galleryFullyLoaded && galleryHasMore);
-  loadMoreBtn.disabled = galleryLoadingMore;
-  loadMoreBtn.textContent = galleryLoadingMore ? 'Loading…' : 'Load more photos';
+/* Shows the small spinner exactly while a Gallery page is actually being
+   fetched, and never otherwise — not while idle, not once everything is
+   loaded, and not while waiting out a retry backoff (nothing to show mid-wait
+   there; the spinner reappears the moment the retry actually starts). */
+function updateGalleryLoadingIndicator(){
+  const wrap = $('gallerySpinnerWrap');
+  if(!wrap) return;
+  wrap.hidden = !galleryLoadingMore;
 }
 
 /* Drops a freshly arrived photo into whichever fixed slots were waiting for
@@ -1719,14 +1832,22 @@ function renderPublicSite(){
   // Gallery masonry — built (and kept up to date) photo by photo, so a full
   // re-render here never rebuilds tiles that are already on screen.
   syncGalleryGrid();
-  updateGalleryLoadMoreUi();
+  updateGalleryLoadingIndicator();
 
   // Moments
   const momEl = $('momentsList');
-  if(momentsCache.length === 0){
+  if(!momentsLoaded){
+    // Still fetching (or the initial load failed and hasn't been retried
+    // yet) — say so, rather than a confident "no moments" that isn't true.
     momEl.innerHTML = '';
+    $('momentsLoading').hidden = false;
+    $('momentsEmpty').hidden = true;
+  }else if(momentsCache.length === 0){
+    momEl.innerHTML = '';
+    $('momentsLoading').hidden = true;
     $('momentsEmpty').hidden = false;
   }else{
+    $('momentsLoading').hidden = true;
     $('momentsEmpty').hidden = true;
     momEl.innerHTML = momentsCache.map((m, i) => {
       const p = photoById(m.photoId);
@@ -1761,10 +1882,20 @@ function renderPublicSite(){
 function renderWallpaperGrid(){
   const wpEl = $('wallpaperGrid');
   if(!wpEl) return;
-  if(wallpapersCache.length === 0){
+  if(!wallpapersLoaded){
+    // Still fetching — the section is deliberately loaded lazily (see
+    // ensureWallpapersLoaded), so a visitor who scrolls here fast can easily
+    // arrive before the fetch lands. Say "Loading…", not "none added" —
+    // that line is only true once wallpapersLoaded actually confirms it.
     wpEl.innerHTML = '';
+    $('wallpaperLoading').hidden = false;
+    $('wallpaperEmpty').hidden = true;
+  }else if(wallpapersCache.length === 0){
+    wpEl.innerHTML = '';
+    $('wallpaperLoading').hidden = true;
     $('wallpaperEmpty').hidden = false;
   }else{
+    $('wallpaperLoading').hidden = true;
     $('wallpaperEmpty').hidden = true;
     wpEl.innerHTML = wallpapersCache.map((w, i) => `
       <div class="wp-card" data-idx="${i}">
@@ -1886,6 +2017,69 @@ document.querySelectorAll('.main-nav a').forEach(a => a.addEventListener('click'
   $('hamburgerBtn').classList.remove('open');
   $('hamburgerBtn').setAttribute('aria-expanded', 'false');
 }));
+
+/* ============ Same-page section links (nav + the two Hero/About buttons) ============
+   A plain `href="#id"` jump normally works fine on its own. The one case it
+   doesn't handle well is exactly what the fast-opening page above creates on
+   purpose: several photos (Hero thumbnails, About's image, each Moment's
+   photo) are still arriving in the background when the page first opens. A
+   Moment's frame deliberately has no reserved height until its real photo
+   loads (see the comment on .moment-img — that's to avoid ever cropping a
+   face, not an oversight), so one of those photos popping in can grow the
+   page WHILE a click's scroll is already under way. The browser computes a
+   smooth-scroll's target position once, at the moment you click, and never
+   re-checks it — so a layout shift like that mid-scroll used to leave a
+   click landing short, one section early, exactly as reported (Wallpaper →
+   landed on Moments, Moments → landed mid-Gallery).
+
+   The fix: after the initial scroll, keep re-checking the target section's
+   actual position for a couple of seconds, and nudge back into place if
+   something shifted it — so any late-arriving photo is absorbed instead of
+   quietly leaving the visitor in the wrong place. It never fights a scroll
+   the visitor starts themselves: any manual scroll/swipe/key input cancels
+   the correction immediately. */
+function scrollToSection(id){
+  const el = document.getElementById(id);
+  if(!el) return;
+  const isAligned = ()=> Math.abs(el.getBoundingClientRect().top) < 3;
+  el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+  let cancelled = false;
+  let checks = 0;
+  let goodStreak = 0;
+  const MAX_CHECKS = 6;         // ~2.1s total — comfortably covers a slow image decode
+  const CHECK_EVERY_MS = 350;
+
+  const cancel = ()=>{ cancelled = true; clearInterval(timer); };
+  // Any input that looks like the visitor taking over the scroll themselves
+  // stops this immediately — it should never fight a manual scroll.
+  ['wheel', 'touchstart', 'keydown'].forEach(evt =>
+    window.addEventListener(evt, cancel, { once: true, passive: true })
+  );
+
+  const timer = setInterval(()=>{
+    if(cancelled) return;
+    checks++;
+    if(isAligned()){
+      goodStreak++;
+      if(goodStreak >= 2) cancel();   // settled for two checks in a row — done
+    }else{
+      goodStreak = 0;
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });  // something shifted — nudge back
+    }
+    if(checks >= MAX_CHECKS) cancel();
+  }, CHECK_EVERY_MS);
+}
+document.querySelectorAll('a[href^="#"]').forEach(a => {
+  const id = a.getAttribute('href').slice(1);
+  if(!id) return;
+  a.addEventListener('click', (e)=>{
+    if(!document.getElementById(id)) return;  // no matching section — let the browser do whatever it would normally do
+    e.preventDefault();
+    scrollToSection(id);
+    if(window.history && history.pushState) history.pushState(null, '', '#' + id);
+  });
+});
 
 /* ============ Owner auth ============ */
 const ownerBtn = $('ownerBtn');
