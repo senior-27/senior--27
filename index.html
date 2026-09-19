@@ -10,7 +10,6 @@
 <meta property="og:type" content="website">
 <meta property="og:title" content="Senior 27 — The Official Gallery">
 <meta property="og:description" content="Browse photos, featured moments, and downloadable wallpapers from our senior year.">
-<meta property="og:image" content="">
 <meta name="twitter:card" content="summary_large_image">
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -182,30 +181,38 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
   clip-path:polygon(14% 0, 100% 0, 100% 100%, 0% 100%);
   background:var(--card);
 }
-.hero-photo-main img{
-  width:100%; height:100%; object-fit:cover;
-  animation:heroPan 18s ease-in-out infinite alternate;
+.hero-photo-media{
+  position:absolute;
+  left:0;
+  top:0;
+  width:100%;
+  height:100%;
+  will-change:transform;
+  animation:heroPanAdaptive 18s ease-in-out infinite alternate;
+  backface-visibility:hidden;
+  -webkit-backface-visibility:hidden;
+  transform:translate3d(0,0,0);
 }
-@keyframes heroPan{
-  0%{ object-position: 0% center; }
-  100%{ object-position: 100% center; }
+.hero-photo-media img{
+  width:100%; height:100%; object-fit:cover; display:block;
 }
-@media(prefers-reduced-motion: reduce){
-  .hero-photo-main img{ animation:none; object-position:center; }
+@keyframes heroPanAdaptive{
+  0%{ transform:translate3d(0,0,0); }
+  100%{ transform:translate3d(var(--hero-pan-x, -120px),0,0); }
 }
-.hero-side-note{
-  position:absolute; bottom:32px; right:0; width:230px; background:var(--cream-deep);
-  padding:26px 24px; font-family:'Fraunces',serif;
+.hero-quote{
+  margin-top:32px; max-width:340px;
+  padding:4px 0 4px 18px; border-left:3px solid var(--accent);
 }
-.hero-side-note .eyebrow{font-family:'Inter',sans-serif; margin-bottom:14px;}
-.hero-side-note p.serif{font-size:20px; line-height:1.25; margin:0 0 16px; font-weight:500;}
-.hero-side-note .small-text{font-family:'Inter',sans-serif; font-size:13px; color:var(--ink-soft); line-height:1.6;}
+.hero-quote .eyebrow{display:block; margin-bottom:10px; color:var(--accent);}
+.hero-quote p.serif{font-size:21px; line-height:1.3; margin:0; font-weight:500; color:var(--ink);}
 
 @media(max-width:860px){
   .hero-grid{grid-template-columns:1fr; padding:0 20px;}
   .hero-left{padding:24px 0 30px;}
   .hero-photo-main{min-height:340px; clip-path:none; border-radius:2px;}
-  .hero-side-note{position:static; width:auto; margin-top:16px;}
+  .hero-quote{margin-top:26px; max-width:none;}
+  .hero-quote p.serif{font-size:19px;}
   .wrap{padding:0 24px;}
   header.site-header{padding:20px 24px;}
 }
@@ -368,7 +375,28 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
 .wp-card .wp-meta{padding:14px 16px;}
 .wp-card .wp-meta .wp-title{font-weight:600; font-size:14px;}
 .wp-card .wp-meta .wp-desc{color:var(--ink-soft); font-size:12.5px; margin-top:4px;}
-@media(max-width:760px){ .wallpaper-grid{grid-template-columns:repeat(2,1fr);} }
+@media(max-width:760px){
+  .wallpaper-grid{grid-template-columns:repeat(2,1fr);}
+  .dash-list-row{flex-wrap:wrap; align-items:flex-start;}
+  .dash-list-row .row-fields{min-width:0;}
+  .dash-list-row > button{flex:0 0 auto;}
+}
+@media(max-width:560px){
+  .dash-shell{padding-left:14px; padding-right:14px;}
+  .dash-tabs{overflow-x:auto; flex-wrap:nowrap; -webkit-overflow-scrolling:touch;}
+  .dash-tab{white-space:nowrap; flex:0 0 auto;}
+  .dash-grid-photos{grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px;}
+  .dash-list-row{display:grid; grid-template-columns:52px minmax(0,1fr) auto auto auto; gap:8px; padding:10px;}
+  .dash-list-row img,.dash-list-row > div:first-child{width:52px !important; height:52px !important;}
+  .dash-list-row .row-fields{grid-column:2 / -1; width:100%;}
+  .dash-list-row > button{padding:8px 9px; min-width:0;}
+}
+@media(max-width:380px){
+  .dash-grid-photos{grid-template-columns:1fr;}
+  .dash-list-row{grid-template-columns:48px minmax(0,1fr);}
+  .dash-list-row > button{grid-column:auto;}
+  .dash-list-row .row-fields{grid-column:1 / -1;}
+}
 
 /* ---------- Initial load state ---------- */
 body.site-loading .hero-desc,
@@ -423,10 +451,10 @@ footer{border-top:1px solid var(--line); padding:34px 0; margin-top:20px;}
 /* ---------- Lightbox ---------- */
 .lightbox{
   position:fixed; inset:0; background:rgba(15,14,12,0.94); z-index:500;
-  display:flex; align-items:center; justify-content:center; opacity:0; pointer-events:none;
-  transition:opacity .3s ease;
+  display:flex; align-items:center; justify-content:center; opacity:0; pointer-events:none; visibility:hidden;
+  transition:opacity .3s ease, visibility 0s linear .3s;
 }
-.lightbox.active{opacity:1; pointer-events:auto;}
+.lightbox.active{opacity:1; pointer-events:auto; visibility:visible; transition:opacity .3s ease;}
 .lightbox img{max-width:88vw; max-height:82vh; object-fit:contain;}
 .lightbox .lb-cap{position:absolute; bottom:36px; left:0; right:0; text-align:center; color:#f6f2ea; font-size:13px;}
 .lightbox .lb-close{position:absolute; top:24px; right:32px; color:#f6f2ea; font-size:26px; background:none; border:none; transition:opacity .2s ease;}
@@ -537,8 +565,19 @@ footer{border-top:1px solid var(--line); padding:34px 0; margin-top:20px;}
 .picker-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(90px,1fr)); gap:8px; max-height:280px; overflow-y:auto; padding:10px; background:#fff; border:1px solid var(--line);}
 .picker-grid img{aspect-ratio:1; object-fit:cover; cursor:pointer; border:2px solid transparent;}
 .picker-grid img.selected{border-color:var(--accent);}
+.picker-grid.busy{opacity:0.6; pointer-events:none;}
 .save-bar{position:sticky; bottom:0; background:var(--cream); border-top:1px solid var(--line); padding:14px 0; margin-top:20px; display:flex; justify-content:flex-end; gap:10px;}
 [hidden]{display:none !important;}
+.section-head-row .eyebrow{display:block;}
+@media(max-width:560px){
+  .dash-shell{padding-left:14px; padding-right:14px;}
+  .dash-tabs{overflow-x:auto; flex-wrap:nowrap; -webkit-overflow-scrolling:touch;}
+  .dash-tab{white-space:nowrap; flex:0 0 auto;}
+  .dash-grid-photos{grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px;}
+  .dash-list-row{flex-wrap:wrap;}
+  .dash-list-row .row-fields{flex:1 1 calc(100% - 76px); min-width:0;}
+  .dash-list-row > button{flex:1 1 28%;}
+}
 </style>
 </head>
 <body class="site-loading">
@@ -584,13 +623,13 @@ footer{border-top:1px solid var(--line); padding:34px 0; margin-top:20px;}
         </div>
       </div>
       <div class="hero-thumbs" id="heroThumbs"></div>
-    </div>
-    <div class="hero-right">
-      <div class="hero-photo-main" id="heroPhotoMain"></div>
-      <div class="hero-side-note">
+      <div class="hero-quote">
         <span class="eyebrow">Captured to Last Forever</span>
         <p class="serif">Senior year is not just a phase, it's our story.</p>
       </div>
+    </div>
+    <div class="hero-right">
+      <div class="hero-photo-main" id="heroPhotoMain"></div>
     </div>
   </div>
 </section>
@@ -672,6 +711,10 @@ footer{border-top:1px solid var(--line); padding:34px 0; margin-top:20px;}
       <span class="eyebrow">No wallpapers yet</span>
       <p>Wallpapers added by the Owner will appear here.</p>
     </div>
+    <div class="gallery-sentinel" id="wallpaperLoadSentinel" aria-hidden="true"></div>
+    <div class="gallery-spinner-wrap" id="wallpaperSpinnerWrap" hidden>
+      <div class="gallery-spinner" role="status" aria-label="Loading more wallpapers"></div>
+    </div>
   </div>
 </section>
 
@@ -681,7 +724,7 @@ footer{border-top:1px solid var(--line); padding:34px 0; margin-top:20px;}
       <div class="brand-line" id="footerBrand">Senior 27 Gallery</div>
       <div class="tagline" id="footerTagline">Memories today, legends tomorrow.</div>
     </div>
-    <a class="footer-instagram" href="https://www.instagram.com/tilsseniorss27?stkn=MXV1dm96YXRzdzczcg==" target="_blank" rel="noopener noreferrer" aria-label="Senior 27 on Instagram — opens in a new tab">
+    <a class="footer-instagram" href="https://www.instagram.com/tilsseniorss27" target="_blank" rel="noopener noreferrer" aria-label="Senior 27 on Instagram — opens in a new tab">
       <span class="ig-badge">
         <svg viewBox="0 0 24 24" aria-hidden="true">
           <rect x="3" y="3" width="18" height="18" rx="5"></rect>
@@ -886,6 +929,14 @@ const firebaseConfig = {
   appId: "1:1034970186713:web:e94d26247f2d0d8d338fc8",
   measurementId: "G-DM1X1N8PF4"
 };
+if(typeof firebase === 'undefined'){
+  document.body.classList.remove('site-loading');
+  $ready = document.getElementById.bind(document);
+  $ready('loadVeil').classList.add('hidden');
+  $ready('loadFailBanner').classList.add('show');
+  $ready('loadFailRetry').onclick = ()=> location.reload();
+  throw new Error('firebase-sdk-missing');
+}
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 const auth = firebase.auth();
@@ -908,6 +959,22 @@ let momentsCache = [];  // [{id, photoId, title, caption, sortOrder}]
 // the fetch hadn't landed. See loadMoments() / renderPublicSite().
 let momentsLoaded = false;
 let wallpapersCache = [];
+/* Wallpaper pagination state — mirrors the Gallery's exactly (see below),
+   for the same reason: fetching every wallpaper in one request used to be
+   the actual bug behind "this section takes forever to load" — each
+   wallpaper stores a full image, same as a Gallery photo, and downloading
+   the whole collection in a single request doesn't get faster just because
+   there's no masonry to reflow. wallpapersLoaded means "the first page has
+   landed" (used to tell a genuinely empty collection apart from one that
+   just hasn't loaded yet — see renderWallpaperGrid). wallpapersFullyLoaded
+   means "the Owner's Dashboard has the complete set" (needed there, and
+   only there, for safe reordering).*/
+let wallpapersLastDoc = null;
+let wallpapersHasMore = false;
+let wallpapersLoadingMore = false;
+let wallpapersFullyLoaded = false;
+const WALLPAPER_INITIAL_PAGE_SIZE = 6;
+const WALLPAPER_PAGE_SIZE = 9;
 let homeSettings = {};
 let aboutSettings = {};
 let siteSettings = {};
@@ -967,6 +1034,123 @@ let selectedAboutImageId = null;
 function $(id){ return document.getElementById(id); }
 function esc(str){ return (str||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 
+/* ============ Network resilience ============
+   All remote reads/writes use bounded waits. A Firebase promise cannot be
+   forcibly cancelled by Promise.race(), so the underlying request is allowed
+   to finish in the SDK while the UI is released and can recover; late results
+   are always reconciled against current state before mutating the UI. */
+const NET_READ_TIMEOUT_MS = 12000;
+const NET_WRITE_TIMEOUT_MS = 20000;
+const NET_AUTH_TIMEOUT_MS = 15000;
+const NET_IMAGE_TIMEOUT_MS = 12000;
+const NET_DOWNLOAD_TIMEOUT_MS = 20000;
+const NET_ADMIN_READ_TIMEOUT_MS = 45000;
+
+function isTimeoutError(err){
+  return !!(err && String(err.message || err).startsWith('timeout:'));
+}
+
+function withTimeout(promise, ms, label){
+  let timer = null;
+  return new Promise((resolve, reject)=>{
+    timer = setTimeout(()=> reject(new Error('timeout:' + (label || ''))), ms);
+    Promise.resolve(promise).then(value=>{
+      clearTimeout(timer);
+      resolve(value);
+    }, err=>{
+      clearTimeout(timer);
+      reject(err);
+    });
+  });
+}
+
+async function readWithRetry(task, label, attempts=2, timeoutMs=NET_READ_TIMEOUT_MS){
+  let lastError = null;
+  for(let attempt=0; attempt<attempts; attempt++){
+    try{
+      return await withTimeout(task(), timeoutMs, label);
+    }catch(e){
+      lastError = e;
+      if(attempt === attempts - 1) break;
+      await sleep(450 * (attempt + 1));
+    }
+  }
+  throw lastError || new Error('read-failed:' + (label || ''));
+}
+
+function firestoreValuesMatch(data, actual){
+  return Object.keys(data || {}).every(key => JSON.stringify(actual ? actual[key] : undefined) === JSON.stringify(data[key]));
+}
+
+async function setDocSafely(ref, data, timeoutMs=NET_WRITE_TIMEOUT_MS, label='set'){
+  try{
+    await withTimeout(ref.set(data, { merge:true }), timeoutMs, label);
+    return ref;
+  }catch(e){
+    if(isTimeoutError(e)){
+      try{
+        const snap = await readWithRetry(()=>ref.get(), label + '-reconcile', 1, 7000);
+        if(snap.exists && firestoreValuesMatch(data, snap.data())) return ref;
+      }catch(_){}
+    }
+    throw e;
+  }
+}
+
+async function updateDocSafely(ref, data, timeoutMs=NET_WRITE_TIMEOUT_MS, label='update'){
+  try{
+    await withTimeout(ref.update(data), timeoutMs, label);
+    return ref;
+  }catch(e){
+    if(isTimeoutError(e)){
+      try{
+        const snap = await readWithRetry(()=>ref.get(), label + '-reconcile', 1, 7000);
+        if(snap.exists && firestoreValuesMatch(data, snap.data())) return ref;
+      }catch(_){}
+    }
+    throw e;
+  }
+}
+
+async function deleteDocSafely(ref, timeoutMs=NET_WRITE_TIMEOUT_MS, label='delete'){
+  try{
+    await withTimeout(ref.delete(), timeoutMs, label);
+    return true;
+  }catch(e){
+    if(isTimeoutError(e)){
+      try{
+        const snap = await readWithRetry(()=>ref.get(), label + '-reconcile', 1, 7000);
+        if(!snap.exists) return true;
+      }catch(_){}
+    }
+    throw e;
+  }
+}
+
+/* Guards the Hero/About "button" links (heroButtonUrl / aboutSettings.buttonUrl)
+   before they ever reach an href on the public page. These are free-text
+   fields in the Dashboard with no scheme restriction, and — unlike
+   captions/titles, which only ever become text — a URL becomes something
+   the browser actively NAVIGATES to when clicked. A `javascript:` value
+   there would run arbitrary script in every visitor's browser the moment
+   they clicked "View Gallery"; a `data:` value can be used the same way.
+   Only a small allow-list of schemes a "read more" button could ever
+   legitimately need is permitted; anything else (or anything that fails to
+   parse as a URL) falls back to the same '#gallery' default already used
+   when the field is empty — never a silent rewrite to something else that
+   looks similar, just the same safe default this button already has. */
+function safeUrl(url){
+  const value = (url || '').trim();
+  if(!value) return '';
+  if(value.startsWith('//')) return '';
+  if(value.startsWith('#') || value.startsWith('/')) return value;  // same-page or site-relative — always safe
+  try{
+    const parsed = new URL(value, window.location.href);
+    if(['http:', 'https:', 'mailto:', 'tel:'].includes(parsed.protocol)) return value;
+  }catch(e){ /* not a parseable URL at all — falls through to reject below */ }
+  return '';
+}
+
 function showToast(message, type){
   const toast = document.createElement('div');
   toast.className = 'toast' + (type ? ' toast-' + type : '');
@@ -991,12 +1175,29 @@ function photoById(id){ return photosCache.find(p => p.id === id); }
 function resolveMomentDate(moment, photo){
   return (moment && moment.dateOverride) || (photo && photo.photoDate) || '';
 }
+/* Strictly validates a "YYYY-MM-DD" string as a REAL calendar date. This is
+   the check formatMomentDate below relies on, and the one place JavaScript's
+   own Date constructor can't be trusted for: `new Date(2026, 1, 31)` (Feb 31)
+   doesn't throw or produce NaN — it silently rolls over to March 3, 2026,
+   and `new Date(2026, 12, 1)` (month 13) rolls into January 2027. Neither
+   is caught by a NaN check, so a typo or a bad manual edit in Firestore
+   could have displayed a confidently wrong date with no visible sign
+   anything was off. Round-tripping the constructed date's own fields back
+   against the input catches exactly this: if what Date actually built
+   doesn't match what was asked for, the input wasn't a real date. */
+function isValidDateStr(dateStr){
+  if(!dateStr || typeof dateStr !== 'string') return false;
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(dateStr);
+  if(!m) return false;
+  const year = Number(m[1]), month = Number(m[2]), day = Number(m[3]);
+  if(month < 1 || month > 12 || day < 1 || day > 31) return false;
+  const d = new Date(year, month - 1, day);
+  return d.getFullYear() === year && d.getMonth() === month - 1 && d.getDate() === day;
+}
 function formatMomentDate(dateStr){
-  if(!dateStr) return '';
+  if(!isValidDateStr(dateStr)) return '';
   const parts = dateStr.split('-').map(Number);
-  if(parts.length !== 3 || parts.some(n => Number.isNaN(n))) return '';
   const d = new Date(parts[0], parts[1] - 1, parts[2]);
-  if(Number.isNaN(d.getTime())) return '';
   return d.toLocaleDateString('en-US', { month:'long', day:'numeric', year:'numeric' });
 }
 
@@ -1026,7 +1227,17 @@ function brokenImgAttr(){ return `onerror="this.style.display='none'; this.datas
    into view. `.mv-pending` is only ever added here, right before observing —
    never left as the default state — and any failure below is caught and
    cleaned up, so a Moment can never end up permanently hidden. */
+/* Tracks the current "reveal on scroll" observer for #momentsList so it can
+   be disconnected before a new one is created. renderPublicSite() rebuilds
+   #momentsList's contents from scratch on every call (any Dashboard edit
+   triggers one, not just an actual change to Moments), which means the OLD
+   .moment-item nodes this was watching become detached from the page —
+   without disconnecting the observer that was watching them first, it keeps
+   a live reference to those dead nodes indefinitely, and each further edit
+   during a Dashboard session added yet another one on top. */
+let momentsRevealObserver = null;
 function initMomentsReveal(){
+  if(momentsRevealObserver){ momentsRevealObserver.disconnect(); momentsRevealObserver = null; }
   const items = document.querySelectorAll('#momentsList .moment-item');
   if(!items.length) return;
   const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -1040,6 +1251,7 @@ function initMomentsReveal(){
         }
       });
     }, { threshold:0.2, rootMargin:'0px 0px -8% 0px' });
+    momentsRevealObserver = io;
     items.forEach(item=>{
       item.classList.add('mv-pending');
       io.observe(item);
@@ -1052,8 +1264,8 @@ function initMomentsReveal(){
 /* Milestone-based photo count: never hardcoded, always derived from photosCache.length */
 function computeMilestoneLabel(count){
   if(count <= 0) return '0';
-  const milestone = Math.max(50, Math.ceil(count / 50) * 50);
-  return milestone + '+';
+  if(count < 50) return String(count);
+  return (Math.floor(count / 50) * 50) + '+';
 }
 
 /* Compress an uploaded image file into a size-capped base64 data URL.
@@ -1141,17 +1353,47 @@ async function backfillThumbs(collectionRef, cache){
     backfillRunning = false;
   }
 }
+/* Generous safety caps, both comfortably above anything a real phone/camera
+   photo would ever hit: a raw file bigger than this would mean a very slow,
+   memory-heavy FileReader pass for no real benefit (it's getting compressed
+   down to under a megabyte either way), and a canvas whose width or height
+   exceeds this can silently fail or produce a blank/corrupt image on some
+   mobile browsers (canvas area limits vary by device). compressImageToLimit
+   already scales down by WIDTH, which also naturally shrinks height for any
+   normal photo — this only exists to catch the pathological opposite case
+   (a very narrow, extremely tall image) that width-based scaling alone
+   wouldn't reduce, since neither cap is ever approached by an ordinary
+   photo, so no real upload is affected by adding them. */
+const MAX_UPLOAD_FILE_BYTES = 40 * 1024 * 1024;   // 40MB raw file
+const MAX_UPLOAD_DIMENSION_PX = 12000;            // per side, before any scaling
 function fileToCompressed(file, maxW, quality){
   return new Promise((resolve, reject)=>{
+    if(file && file.size > MAX_UPLOAD_FILE_BYTES){
+      reject(new Error('file-too-large'));
+      return;
+    }
     const reader = new FileReader();
     reader.onload = (ev)=>{
       const img = new Image();
       img.onload = ()=>{
-        const full = compressImageToLimit(img, maxW, quality);
-        const thumb = compressImageToLimit(img, 900, 0.82, THUMB_MAX_BYTES).dataUrl;
-        resolve({ ...full, thumb, thumbV: THUMB_VERSION });
+        if(img.width > MAX_UPLOAD_DIMENSION_PX || img.height > MAX_UPLOAD_DIMENSION_PX){
+          const shrink = MAX_UPLOAD_DIMENSION_PX / Math.max(img.width, img.height);
+          img.width = Math.round(img.width * shrink);
+          img.height = Math.round(img.height * shrink);
+        }
+        try{
+          const full = compressImageToLimit(img, maxW, quality);
+          const thumb = compressImageToLimit(img, 900, 0.82, THUMB_MAX_BYTES).dataUrl;
+          resolve({ ...full, thumb, thumbV: THUMB_VERSION });
+        }catch(e){
+          // A canvas operation can still throw on some devices for a
+          // corrupt or unusually-encoded file even after the checks above —
+          // surfaced as a normal rejected upload (existing error toast),
+          // not a silent freeze or an unhandled exception.
+          reject(e);
+        }
       };
-      img.onerror = reject;
+      img.onerror = ()=> reject(new Error('not-an-image'));
       img.src = ev.target.result;
     };
     reader.onerror = reject;
@@ -1160,12 +1402,20 @@ function fileToCompressed(file, maxW, quality){
 }
 
 /* ============ Load data ============ */
-// NOTE: Firestore's .orderBy('sortOrder') silently EXCLUDES any document that
-// doesn't have a sortOrder field at all (this is Firestore behaviour, not a bug
-// in the old try/catch — that catch only fired on missing-index errors, never
-// on this). Any legacy/older document without sortOrder would simply vanish
-// from the site with no error. We now always fetch the full collection and
-// sort client-side so no document — old or new — is ever silently dropped.
+// Firestore's .orderBy('sortOrder') silently EXCLUDES any document that
+// doesn't have a sortOrder field at all — this is Firestore's own behaviour
+// for an orderBy query, not something this code does. Every photo/wallpaper
+// created through this app's own upload code always gets a sortOrder, so
+// this can only ever affect a genuinely legacy document from before that
+// field existed. The public Gallery/Wallpaper pages do page through
+// .orderBy('sortOrder') (that pagination is what keeps the site opening
+// fast — see loadPhotos()/loadWallpapersFirstPage()), so a document missing
+// this field would be invisible to a public visitor specifically — never
+// lost, just unreachable by that query — until backfillMissingSortOrder()
+// (below) assigns it one, which happens automatically the moment the Owner
+// opens the Dashboard. sortByOrderThenCreated is the client-side ordering
+// used everywhere the admin/public caches get merged or displayed; it's not
+// itself what protects against the Firestore-side exclusion above.
 function sortByOrderThenCreated(list){
   return list.slice().sort((a, b) => {
     const ao = a.sortOrder, bo = b.sortOrder;
@@ -1194,7 +1444,7 @@ function sortByOrderThenCreated(list){
    complete set the Dashboard needs is fetched when the Dashboard is actually
    opened (see openOwnerDashboard), which is the only place it's needed. */
 async function loadPhotos(){
-  const pageSnap = await PHOTOS.orderBy('sortOrder', 'asc').limit(INITIAL_GALLERY_PAGE_SIZE).get();
+  const pageSnap = await readWithRetry(() => PHOTOS.orderBy('sortOrder', 'asc').limit(INITIAL_GALLERY_PAGE_SIZE).get(), 'gallery-initial');
   const byId = {};
   pageSnap.docs.forEach(d => byId[d.id] = { id: d.id, ...d.data() });
 
@@ -1206,7 +1456,7 @@ async function loadPhotos(){
      streamer below, because each of those is a full-size image and waiting
      for all of them is exactly what made the first open slow. */
   if(homeSettings.heroImageId && !byId[homeSettings.heroImageId]){
-    const heroDoc = await PHOTOS.doc(homeSettings.heroImageId).get().catch(()=>null);
+    const heroDoc = await readWithRetry(() => PHOTOS.doc(homeSettings.heroImageId).get(), 'hero-main', 1).catch(()=>null);
     if(heroDoc && heroDoc.exists) byId[heroDoc.id] = { id: heroDoc.id, ...heroDoc.data() };
   }
 
@@ -1221,7 +1471,11 @@ async function loadPhotos(){
   const queuePhoto = (id)=>{ if(id && !have.has(id) && queue.indexOf(id) === -1) queue.push(id); };
   if(Array.isArray(homeSettings.heroThumbIds)) homeSettings.heroThumbIds.forEach(queuePhoto);
   queuePhoto(aboutSettings.imageId);
-  momentsCache.forEach(m => queuePhoto(m.photoId));
+  /* The main Hero image is intentionally fetched in the first pass, but if
+     that one request timed out or the document disappeared temporarily, put
+     its id into the same bounded recovery queue so it can heal after the
+     connection returns instead of staying on the placeholder forever. */
+  queuePhoto(homeSettings.heroImageId);
   deferredPhotoIds = queue;
   // galleryLastDoc/galleryHasMore must be based on the raw first-page query
   // (pageSnap), NOT on photosCache — photosCache can contain a few extra
@@ -1238,7 +1492,7 @@ async function loadPhotos(){
    change. This only runs for the authenticated Owner, never for public
    visitors, so it doesn't affect the loading-speed problem this is fixing. */
 async function loadAllPhotosForAdmin(){
-  const snap = await PHOTOS.get();
+  const snap = await readWithRetry(() => PHOTOS.get(), 'admin-photos', 1, NET_ADMIN_READ_TIMEOUT_MS);
   photosCache = sortByOrderThenCreated(snap.docs.map(d => ({ id: d.id, ...d.data() })));
   galleryHasMore = false;
   galleryFullyLoaded = true;
@@ -1301,7 +1555,7 @@ async function loadMoreGalleryPhotos(pageSize){
   updateGalleryLoadingIndicator();
   let ok = false;
   try{
-    const snap = await PHOTOS.orderBy('sortOrder', 'asc').startAfter(galleryLastDoc).limit(size).get();
+    const snap = await readWithRetry(() => PHOTOS.orderBy('sortOrder', 'asc').startAfter(galleryLastDoc).limit(size).get(), 'gallery-page', 2);
     // The Dashboard may have loaded the complete set while this page was in
     // flight. If so, this page is stale by definition — everything in it is
     // already in hand — so it must not touch the cursor or flip "has more"
@@ -1348,14 +1602,37 @@ function sleep(ms){ return new Promise(r => setTimeout(r, ms)); }
 async function fetchPhotoDoc(id){
   for(let attempt = 0; attempt < 3; attempt++){
     try{
-      const d = await PHOTOS.doc(id).get();
-      return (d && d.exists) ? { id: d.id, ...d.data() } : null;
+      const d = await withTimeout(PHOTOS.doc(id).get(), NET_IMAGE_TIMEOUT_MS, 'photo-doc');
+      return { photo: (d && d.exists) ? { id: d.id, ...d.data() } : null, retryable: false };
     }catch(e){
       if(attempt < 2) await sleep(700 * (attempt + 1));
     }
   }
-  return null;
+  return { photo: null, retryable: true };
 }
+
+const DEFERRED_PHOTO_MAX_RETRY_ROUNDS = 4;
+let deferredPhotoRetryIds = new Set();
+let deferredPhotoRetryCounts = new Map();
+let deferredPhotoRetryTimer = null;
+
+function scheduleDeferredPhotoRetry(delay=5000){
+  if(deferredPhotoRetryTimer || deferredPhotoRetryIds.size === 0) return;
+  deferredPhotoRetryTimer = setTimeout(async ()=>{
+    deferredPhotoRetryTimer = null;
+    const ids = Array.from(deferredPhotoRetryIds);
+    deferredPhotoRetryIds.clear();
+    ids.forEach(id => { if(!deferredPhotoIds.includes(id)) deferredPhotoIds.push(id); });
+    await autoLoadRemainingGalleryPhotos();
+  }, delay);
+}
+
+window.addEventListener('online', ()=>{
+  if(deferredPhotoRetryIds.size){
+    if(deferredPhotoRetryTimer){ clearTimeout(deferredPhotoRetryTimer); deferredPhotoRetryTimer = null; }
+    scheduleDeferredPhotoRetry(0);
+  }
+});
 
 /* Runs right after the first page is on screen and fills in the small,
    bounded set of specific photos other slots are waiting for (Hero
@@ -1393,19 +1670,23 @@ async function autoLoadRemainingGalleryPhotos(){
       const id = deferredPhotoIds.shift();
       const already = photoById(id);
       if(already){ hydratePhotoSlots(already); continue; }  // arrived via a Gallery page in the meantime
-      const p = await fetchPhotoDoc(id);
-      if(p){
+      const result = await fetchPhotoDoc(id);
+      if(result.photo){
+        const p = result.photo;
         photosCache = sortByOrderThenCreated(photosCache.concat([p]));
         onPhotosArrived([p]);
+        deferredPhotoRetryCounts.delete(id);
+      }else if(result.retryable){
+        const count = (deferredPhotoRetryCounts.get(id) || 0) + 1;
+        deferredPhotoRetryCounts.set(id, count);
+        if(count <= DEFERRED_PHOTO_MAX_RETRY_ROUNDS) deferredPhotoRetryIds.add(id);
       }
       await sleep(STREAM_GAP_MS);
     }
   }finally{
     galleryAutoLoadRunning = false;
-    // Everything on the first couple of screens is in place now (or this run
-    // had nothing to do), so it's safe to let the Wallpaper section and the
-    // Gallery's own scroll-triggered loading have the connection.
-    ensureWallpapersLoaded();
+    // Gallery paging can start independently now. Wallpaper has its own
+    // section observer, so it never needs to wait behind a long Moments queue.
     initGalleryInfiniteScroll();
   }
 }
@@ -1518,21 +1799,79 @@ window.addEventListener('online', ()=>{
   if(gallerySentinelVisible) triggerGalleryLoadMore();
 });
 async function loadMoments(){
-  const snap = await MOMENTS.get();
+  const snap = await readWithRetry(() => MOMENTS.get(), 'moments', 2);
   momentsCache = sortByOrderThenCreated(snap.docs.map(d => ({ id:d.id, ...d.data() })));
   momentsLoaded = true;
 }
-async function loadWallpapers(){
-  const snap = await WALLPAPERS.get();
+/* Admin only — the Dashboard needs every wallpaper at once, the same reason
+   loadAllPhotosForAdmin exists: reordering swaps sortOrder between
+   neighbours, so acting on a partial list could put wallpapers in the wrong
+   order. Called once, when the Owner opens the Dashboard (openOwnerDashboard)
+   or right after an upload/edit/delete there. */
+async function loadAllWallpapersForAdmin(){
+  const snap = await readWithRetry(() => WALLPAPERS.get(), 'admin-wallpapers', 1, NET_ADMIN_READ_TIMEOUT_MS);
   wallpapersCache = sortByOrderThenCreated(snap.docs.map(d => ({ id:d.id, ...d.data() })));
-  // Any successful fetch counts — including the Dashboard's own reloads after
-  // an edit — so the deferred loader below never re-downloads the collection
-  // that is already in hand.
+  wallpapersHasMore = false;
+  wallpapersFullyLoaded = true;
+  wallpapersLoaded = true;   // the public section, if visible behind the Dashboard, is also fully covered now
+}
+
+/* Public — fetches only the first small page, exactly like loadPhotos() does
+   for the Gallery. The rest streams in as the visitor scrolls near the
+   bottom of the section (see initWallpaperInfiniteScroll). This is what
+   actually fixes "the Wallpaper section takes forever to load": before,
+   opening this section meant downloading every wallpaper — each one a full
+   image, same as a Gallery photo — in a single request, whatever the total
+   count. Paging it the same way the Gallery already is removes that
+   regardless of how many wallpapers a class ends up adding over the years. */
+async function loadWallpapersFirstPage(){
+  const snap = await readWithRetry(() => WALLPAPERS.orderBy('sortOrder', 'asc').limit(WALLPAPER_INITIAL_PAGE_SIZE).get(), 'wallpapers-initial');
+  wallpapersCache = sortByOrderThenCreated(snap.docs.map(d => ({ id:d.id, ...d.data() })));
+  wallpapersLastDoc = snap.docs.length ? snap.docs[snap.docs.length - 1] : null;
+  wallpapersHasMore = snap.docs.length === WALLPAPER_INITIAL_PAGE_SIZE;
   wallpapersLoaded = true;
 }
+
+/* "Load more" for the Wallpaper grid — the exact same shape as
+   loadMoreGalleryPhotos, including staying silent on failure (see that
+   function's comment; triggerWallpaperLoadMore is what decides to retry). */
+async function loadMoreWallpapers(pageSize){
+  const size = pageSize || WALLPAPER_PAGE_SIZE;
+  if(wallpapersFullyLoaded || !wallpapersHasMore || wallpapersLoadingMore || !wallpapersLastDoc) return false;
+  wallpapersLoadingMore = true;
+  updateWallpaperLoadingIndicator();
+  let ok = false;
+  try{
+    const snap = await readWithRetry(() => WALLPAPERS.orderBy('sortOrder', 'asc').startAfter(wallpapersLastDoc).limit(size).get(), 'wallpapers-page', 2);
+    if(wallpapersFullyLoaded) return false;  // Dashboard loaded the complete set while this page was in flight
+    const existingIds = new Set(wallpapersCache.map(w => w.id));
+    const added = [];
+    snap.docs.forEach(d => { if(!existingIds.has(d.id)) added.push({ id: d.id, ...d.data() }); });
+    if(added.length) wallpapersCache = sortByOrderThenCreated(wallpapersCache.concat(added));
+    wallpapersLastDoc = snap.docs.length ? snap.docs[snap.docs.length - 1] : wallpapersLastDoc;
+    wallpapersHasMore = snap.docs.length === size;
+    onWallpapersArrived(added);
+    ok = true;
+  }catch(e){
+    // Silent — triggerWallpaperLoadMore schedules a quiet retry.
+  }finally{
+    wallpapersLoadingMore = false;
+    updateWallpaperLoadingIndicator();
+  }
+  return ok;
+}
+/* A wallpaper (or a few) just landed: add it to the grid without touching
+   anything already shown. */
+function onWallpapersArrived(added){
+  syncWallpaperGrid();
+  updateWallpaperLoadingIndicator();
+}
+
 async function loadSettings(){
   const [homeDoc, aboutDoc, siteDoc] = await Promise.all([
-    SETTINGS.doc('home').get(), SETTINGS.doc('about').get(), SETTINGS.doc('site').get()
+    readWithRetry(() => SETTINGS.doc('home').get(), 'settings-home', 2),
+    readWithRetry(() => SETTINGS.doc('about').get(), 'settings-about', 2),
+    readWithRetry(() => SETTINGS.doc('site').get(), 'settings-site', 2)
   ]);
   homeSettings = homeDoc.exists ? homeDoc.data() : {};
   aboutSettings = aboutDoc.exists ? aboutDoc.data() : {};
@@ -1543,78 +1882,208 @@ async function loadSettings(){
    first (fast) is what lets loadPhotos() below know exactly which specific
    photos Hero/About/Moments need — instead of fetching the whole Gallery
    collection just to answer that question. Wallpaper is unrelated to any of
-   this and still loads fully in parallel the whole time. */
-/* Wallpapers are their own image-heavy collection, and nothing on the first
-   screen depends on them. Fetching them at the same moment as the first
-   paint (as this used to) meant they competed for the connection with the
-   photos the visitor is actually waiting to see. Now they're pulled once the
-   page is already open — once, whoever asks first, with the flags below
-   making a second call a no-op rather than a second download. */
+   this and loads its own first page in parallel the whole time. */
+/* Nothing on the first screen depends on Wallpapers, so fetching even the
+   first small page at the same moment as the rest of the first paint would
+   just compete for the connection with the photos the visitor is actually
+   waiting to see. It's pulled once the page is already open — once,
+   whoever asks first, with the flags below making a second call a no-op
+   rather than a second download. */
 let wallpapersLoaded = false;
 let wallpapersLoading = null;
 let wallpapersRetryDelay = GALLERY_RETRY_MIN_MS;
-const WALLPAPERS_RETRY_MAX_MS = 30000;
+let wallpapersFirstLoadRetryTimer = null;
+let wallpaperStartObserver = null;
+
+function initWallpaperLazyStart(){
+  if(wallpaperStartObserver || wallpapersLoaded) return;
+  const section = $('wallpaper');
+  if(!section) return;
+  if(typeof IntersectionObserver === 'undefined'){
+    setTimeout(()=> ensureWallpapersLoaded(), 1200);
+    return;
+  }
+  try{
+    wallpaperStartObserver = new IntersectionObserver(entries=>{
+      if(entries.some(entry => entry.isIntersecting)){
+        if(wallpaperStartObserver){ wallpaperStartObserver.disconnect(); wallpaperStartObserver = null; }
+        ensureWallpapersLoaded();
+      }
+    }, { rootMargin:'900px 0px' });
+    wallpaperStartObserver.observe(section);
+  }catch(_){
+    setTimeout(()=> ensureWallpapersLoaded(), 1200);
+  }
+}
+
+function scheduleWallpaperFirstLoadRetry(){
+  if(wallpapersFirstLoadRetryTimer) return;
+  const delay = wallpapersRetryDelay;
+  wallpapersRetryDelay = Math.min(wallpapersRetryDelay * 2, GALLERY_RETRY_MAX_MS);
+  wallpapersFirstLoadRetryTimer = setTimeout(()=>{
+    wallpapersFirstLoadRetryTimer = null;
+    ensureWallpapersLoaded();
+  }, delay);
+}
+
 function ensureWallpapersLoaded(){
   if(wallpapersLoaded) return Promise.resolve();
   if(wallpapersLoading) return wallpapersLoading;
-  wallpapersLoading = loadWallpapers().then(()=>{
-    wallpapersLoaded = true;
-    wallpapersRetryDelay = GALLERY_RETRY_MIN_MS;  // reset backoff for any future reload
+  if(wallpapersFirstLoadRetryTimer){
+    clearTimeout(wallpapersFirstLoadRetryTimer);
+    wallpapersFirstLoadRetryTimer = null;
+  }
+  wallpapersLoading = loadWallpapersFirstPage().then(()=>{
+    wallpapersRetryDelay = GALLERY_RETRY_MIN_MS;
     renderWallpaperGrid();
-    // Only refresh the Dashboard if it is actually open in front of the
-    // Owner; rendering it against a partially loaded set would be both
-    // wasted work and a list that isn't safe to reorder from.
+    initWallpaperInfiniteScroll();
+    if(wallpaperStartObserver){ wallpaperStartObserver.disconnect(); wallpaperStartObserver = null; }
     if(unlocked && $('dashOverlay').classList.contains('open')) renderDashboard();
   }).catch(()=>{
-    // Self-healing, exactly like the Gallery's scroll-triggered loading: no
-    // visible error, just a quiet retry with the same doubling backoff, so
-    // one dropped request never leaves the section stuck on "Loading…"
-    // forever with nothing watching it.
-    const delay = wallpapersRetryDelay;
-    wallpapersRetryDelay = Math.min(wallpapersRetryDelay * 2, WALLPAPERS_RETRY_MAX_MS);
-    setTimeout(ensureWallpapersLoaded, delay);
-  }).then(()=>{ wallpapersLoading = null; });
+    scheduleWallpaperFirstLoadRetry();
+  }).finally(()=>{
+    wallpapersLoading = null;
+  });
   return wallpapersLoading;
 }
-// The instant a dropped connection comes back, retry right away instead of
-// waiting out whatever backoff delay happened to be in progress.
 window.addEventListener('online', ()=>{
-  if(!wallpapersLoaded){ wallpapersRetryDelay = GALLERY_RETRY_MIN_MS; ensureWallpapersLoaded(); }
+  if(wallpapersFirstLoadRetryTimer){ clearTimeout(wallpapersFirstLoadRetryTimer); wallpapersFirstLoadRetryTimer = null; }
+  if(!wallpapersLoaded) { wallpapersRetryDelay = GALLERY_RETRY_MIN_MS; ensureWallpapersLoaded(); }
 });
 
-async function loadAll(){
-  const veil = $('loadVeil');
-  const failBanner = $('loadFailBanner');
-
-  try{
-    await Promise.all([loadSettings(), loadMoments()]);
-    await loadPhotos();
-    failBanner.classList.remove('show');
-    document.body.classList.remove('site-loading');
-    renderPublicSite();
-    // Fire-and-forget, for every visitor including the Owner: the site is
-    // already visible with its first 5 photos. This only fills the small,
-    // bounded set of specific photos other slots are waiting for (Hero
-    // thumbnails/About/Moments); the rest of the Gallery loads itself in as
-    // the visitor scrolls near the bottom of it (see
-    // initGalleryInfiniteScroll). The Dashboard is deliberately NOT rendered
-    // here — it is rendered when it's opened, on the complete set.
-    autoLoadRemainingGalleryPhotos();
-  }catch(e){
-    failBanner.classList.add('show');
-    document.body.classList.remove('site-loading');
-    renderPublicSite();
-  }finally{
-    veil.classList.add('hidden');
+/* Infinite scroll for the rest of the Wallpaper section — the exact same
+   pattern as the Gallery's (see initGalleryInfiniteScroll/triggerGalleryLoadMore
+   for the full reasoning): a static, invisible sentinel after the grid,
+   watched once, with the same quiet retry-with-backoff on failure and the
+   same immediate retry the moment the connection comes back. */
+let wallpaperScrollObserver = null;
+let wallpaperSentinelVisible = false;
+let wallpaperRetryTimer = null;
+function initWallpaperInfiniteScroll(){
+  if(wallpaperScrollObserver) return;
+  const sentinel = $('wallpaperLoadSentinel');
+  if(!sentinel || typeof IntersectionObserver === 'undefined'){
+    autoFillWallpapersWithoutObserver();
+    return;
   }
-
-  // The background stream asks for the wallpapers itself, as soon as it has
-  // finished the images nearer the top of the page. This is only the
-  // fallback for when no stream is running at all — e.g. the first load
-  // failed outright — so the section still gets its one request.
-  if(!galleryAutoLoadRunning) await ensureWallpapersLoaded();
+  wallpaperScrollObserver = new IntersectionObserver((entries)=>{
+    entries.forEach(entry => {
+      wallpaperSentinelVisible = entry.isIntersecting;
+      if(entry.isIntersecting) triggerWallpaperLoadMore();
+    });
+  }, { rootMargin: '600px 0px' });
+  wallpaperScrollObserver.observe(sentinel);
 }
-$('loadFailRetry').addEventListener('click', loadAll);
+async function autoFillWallpapersWithoutObserver(){
+  while(!wallpapersFullyLoaded && wallpapersHasMore){
+    const ok = await loadMoreWallpapers(WALLPAPER_PAGE_SIZE);
+    if(ok){ wallpaperRetryDelay = GALLERY_RETRY_MIN_MS; continue; }
+    await sleep(wallpaperRetryDelay);
+    wallpaperRetryDelay = Math.min(wallpaperRetryDelay * 2, GALLERY_RETRY_MAX_MS);
+  }
+}
+let wallpaperRetryDelay = GALLERY_RETRY_MIN_MS;
+async function triggerWallpaperLoadMore(){
+  if(wallpapersFullyLoaded || !wallpapersHasMore || wallpapersLoadingMore) return;
+  const ok = await loadMoreWallpapers(WALLPAPER_PAGE_SIZE);
+  if(!ok){
+    scheduleWallpaperRetry();
+    return;
+  }
+  wallpaperRetryDelay = GALLERY_RETRY_MIN_MS;
+  if(wallpapersFullyLoaded || !wallpapersHasMore) return;
+  const sentinel = $('wallpaperLoadSentinel');
+  if(sentinel && sentinelNearViewport(sentinel)) return triggerWallpaperLoadMore();
+}
+function scheduleWallpaperRetry(){
+  if(wallpaperRetryTimer || wallpapersFullyLoaded || !wallpapersHasMore) return;
+  const delay = wallpaperRetryDelay;
+  wallpaperRetryDelay = Math.min(wallpaperRetryDelay * 2, GALLERY_RETRY_MAX_MS);
+  wallpaperRetryTimer = setTimeout(()=>{
+    wallpaperRetryTimer = null;
+    if(wallpaperSentinelVisible) triggerWallpaperLoadMore();
+  }, delay);
+}
+window.addEventListener('online', ()=>{
+  if(wallpapersFullyLoaded || !wallpapersHasMore) return;
+  if(wallpaperRetryTimer){ clearTimeout(wallpaperRetryTimer); wallpaperRetryTimer = null; }
+  wallpaperRetryDelay = GALLERY_RETRY_MIN_MS;
+  if(wallpaperSentinelVisible) triggerWallpaperLoadMore();
+});
+
+let photosLoadFailed = false;
+let momentsLazyObserver = null;
+function initMomentsLazyLoad(){
+  if(momentsLazyObserver) return;
+  const sec = $('moments'); if(!sec) return;
+  const go = ()=>{
+    momentsCache.forEach(m => { const id = m.photoId; if(id && !photoById(id) && !deferredPhotoIds.includes(id)) deferredPhotoIds.push(id); });
+    autoLoadRemainingGalleryPhotos().catch(()=>{});
+  };
+  if(typeof IntersectionObserver === 'undefined'){ setTimeout(go, 1500); return; }
+  momentsLazyObserver = new IntersectionObserver(es => { if(es.some(e => e.isIntersecting)){ momentsLazyObserver.disconnect(); go(); } }, { rootMargin:'900px 0px' });
+  momentsLazyObserver.observe(sec);
+}
+let loadAllRunning = null;
+async function loadAll(){
+  if(loadAllRunning) return loadAllRunning;
+  loadAllRunning = (async ()=>{
+    const veil = $('loadVeil');
+    const failBanner = $('loadFailBanner');
+    const retryBtn = $('loadFailRetry');
+    if(retryBtn) retryBtn.disabled = true;
+    let hadInitialError = false;
+    try{
+      /* Settings and Moments are independent. One failed small collection
+         must never prevent the Gallery itself from opening. On a partial
+         failure we keep safe defaults for the failed piece, show the retry
+         banner, and let the rest of the site remain usable. */
+      const [settingsResult, momentsResult] = await Promise.allSettled([
+        loadSettings(),
+        loadMoments()
+      ]);
+      if(settingsResult.status === 'rejected') hadInitialError = true;
+      if(momentsResult.status === 'rejected'){
+        momentsCache = [];
+        momentsLoaded = true;
+        hadInitialError = true;
+      }
+
+      photosLoadFailed = false;
+      try{
+        await loadPhotos();
+      }catch(e){
+        hadInitialError = true;
+        photosLoadFailed = true;
+      }
+
+      if(hadInitialError) failBanner.classList.add('show');
+      else failBanner.classList.remove('show');
+      document.body.classList.remove('site-loading');
+      renderPublicSite();
+      initWallpaperLazyStart();
+      initMomentsLazyLoad();
+      const hh = (location.hash || '').slice(1);
+      if(hh && document.getElementById(hh)) setTimeout(()=> scrollToSection(hh), 400);
+
+      // Background-only work never gets to hold the first paint hostage.
+      autoLoadRemainingGalleryPhotos().catch(()=>{});
+    }catch(e){
+      /* Last-resort safety net: the page still becomes usable with whatever
+         data/defaults are already available instead of staying behind the
+         full-screen veil forever. */
+      failBanner.classList.add('show');
+      document.body.classList.remove('site-loading');
+      renderPublicSite();
+      initWallpaperLazyStart();
+    }finally{
+      veil.classList.add('hidden');
+      if(retryBtn) retryBtn.disabled = false;
+    }
+  })().finally(()=>{ loadAllRunning = null; });
+  return loadAllRunning;
+}
+$('loadFailRetry').addEventListener('click', ()=> loadAll());
 // No manual "Load more" click any more — the scroll observer
 // (initGalleryInfiniteScroll) and its own retry/backoff are the only way
 // the rest of the Gallery loads, exactly as asked: no button, self-healing.
@@ -1646,16 +2115,15 @@ function galleryItemMarkup(p){
   // data-id (not an index): indexes shift whenever a photo that sorts
   // earlier arrives later, which is exactly what a background stream does.
   // Resolving the index at click time from the id can never go stale.
-  return `<div class="g-item" data-id="${esc(p.id)}"${p.width && p.height ? ` style="aspect-ratio:${p.width}/${p.height}"` : ''}>
+  return `<div class="g-item" data-id="${esc(p.id)}" role="button" tabindex="0" aria-label="View this photo larger"${p.width && p.height ? ` style="aspect-ratio:${p.width}/${p.height}"` : ''}>
         <img src="${p.thumb || p.image}" alt="${esc(p.caption||'Gallery photo')}" loading="lazy" decoding="async" ${brokenImgAttr()}>
         ${p.caption ? `<div class="g-cap">${esc(p.caption)}</div>` : ''}
       </div>`;
 }
 function wireGalleryItem(el){
-  el.addEventListener('click', ()=>{
-    const idx = photosCache.findIndex(p => p.id === el.dataset.id);
-    if(idx >= 0) openLightbox(idx);
-  });
+  const open = ()=> openLightbox(el.dataset.id);
+  el.addEventListener('click', open);
+  el.addEventListener('keydown', (e)=>{ if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); open(); } });
 }
 function wireMomentImg(wrap){
   if(wrap.dataset.wired === '1') return;   // never bind the same slot twice
@@ -1678,7 +2146,7 @@ function syncGalleryGrid(){
   if(!galEl) return;
   if(photosCache.length === 0){
     galEl.innerHTML = '';
-    $('galleryEmpty').hidden = false;
+    $('galleryEmpty').hidden = photosLoadFailed;
     return;
   }
   $('galleryEmpty').hidden = true;
@@ -1720,6 +2188,53 @@ function updateGalleryLoadingIndicator(){
    it. Every branch checks the slot is actually still empty first, so this is
    safe to call twice for the same photo and safe to call after a full
    re-render has already filled things in. */
+
+/* Matches the old Hero's 0% -> 100% object-position movement in actual
+   pixels, but runs the motion on a transformed layer. This keeps the visual
+   travel proportional to the image/frame geometry on both desktop and
+   mobile, without changing the source image or its quality. */
+let heroPanResizeBound = false;
+function setupHeroPan(){
+  const frame = $('heroPhotoMain');
+  const media = frame?.querySelector('.hero-photo-media');
+  const img = media?.querySelector('img');
+  if(!frame || !media || !img) return;
+
+  const apply = ()=>{
+    if(!img.naturalWidth || !img.naturalHeight) return;
+    const fw = frame.clientWidth;
+    const fh = frame.clientHeight;
+    if(!fw || !fh) return;
+
+    const scale = Math.max(fw / img.naturalWidth, fh / img.naturalHeight);
+    const iw = Math.ceil(img.naturalWidth * scale);
+    const ih = Math.ceil(img.naturalHeight * scale);
+    const shiftX = Math.max(0, iw - fw);
+    const top = Math.round((fh - ih) / 2);
+
+    media.style.width = iw + 'px';
+    media.style.height = ih + 'px';
+    media.style.left = '0px';
+    media.style.top = top + 'px';
+    media.style.setProperty('--hero-pan-x', (-shiftX) + 'px');
+  };
+
+  if(img.complete && img.naturalWidth) apply();
+  else img.addEventListener('load', apply, { once:true });
+
+  if(!heroPanResizeBound){
+    heroPanResizeBound = true;
+    window.addEventListener('resize', ()=>{
+      const current = $('heroPhotoMain');
+      const currentImg = current?.querySelector('.hero-photo-media img');
+      if(!currentImg) return;
+      if(currentImg.complete && currentImg.naturalWidth) setupHeroPan();
+    }, { passive:true });
+  }
+
+  requestAnimationFrame(apply);
+}
+
 function hydratePhotoSlots(p){
   if(!p || !p.id) return;
 
@@ -1734,8 +2249,9 @@ function hydratePhotoSlots(p){
   if(homeSettings.heroImageId === p.id){
     const heroMainEl = $('heroPhotoMain');
     if(heroMainEl && !heroMainEl.querySelector('img')){
-      heroMainEl.innerHTML = `<img src="${p.image}" alt="" onerror="this.closest('.hero-photo-main').innerHTML=heroFallbackMarkup();">`;
+      heroMainEl.innerHTML = `<div class="hero-photo-media"><img src="${p.image}" alt="" fetchpriority="high" loading="eager" decoding="async" onerror="this.closest('.hero-photo-main').innerHTML=heroFallbackMarkup();"></div>`;
     }
+      setupHeroPan();
   }
 
   // About image
@@ -1792,13 +2308,14 @@ function renderPublicSite(){
   $('heroDescription').textContent = homeSettings.heroDescription || 'A year of moments, faces, and memories — captured together, kept forever.';
   const heroBtn = $('heroButton');
   heroBtn.textContent = (homeSettings.heroButtonText || 'View Gallery') + ' →';
-  heroBtn.setAttribute('href', homeSettings.heroButtonUrl || '#gallery');
+  heroBtn.setAttribute('href', safeUrl(homeSettings.heroButtonUrl) || '#gallery');
 
   const heroMain = photoById(homeSettings.heroImageId);
   const heroMainEl = $('heroPhotoMain');
   heroMainEl.innerHTML = heroMain
-    ? `<img src="${heroMain.image}" alt="" onerror="this.closest('.hero-photo-main').innerHTML=heroFallbackMarkup();">`
+    ? `<div class="hero-photo-media"><img src="${heroMain.image}" alt="" fetchpriority="high" loading="eager" decoding="async" onerror="this.closest('.hero-photo-main').innerHTML=heroFallbackMarkup();"></div>`
     : heroFallbackMarkup();
+  setupHeroPan();
 
   // Hero thumbnails are small (80×100) — the thumb is the right size for
   // them permanently, same as the Gallery/Wallpaper grids. No upgrade.
@@ -1818,7 +2335,7 @@ function renderPublicSite(){
   $('aboutStory').textContent = aboutSettings.story || 'The inside jokes. The late nights. The people who made it worth it. All of it, right here.';
   const aboutBtn = $('aboutButton');
   aboutBtn.textContent = (aboutSettings.buttonText || 'Read Our Story') + ' →';
-  aboutBtn.setAttribute('href', aboutSettings.buttonUrl || '#gallery');
+  aboutBtn.setAttribute('href', safeUrl(aboutSettings.buttonUrl) || '#gallery');
   const aboutImg = photoById(aboutSettings.imageId);
   $('aboutImage').innerHTML = aboutImg ? `<img src="${aboutImg.image}" alt="" ${brokenImgAttr()}>` : '';
 
@@ -1897,11 +2414,22 @@ function renderWallpaperGrid(){
   }else{
     $('wallpaperLoading').hidden = true;
     $('wallpaperEmpty').hidden = true;
-    wpEl.innerHTML = wallpapersCache.map((w, i) => `
-      <div class="wp-card" data-idx="${i}">
+    syncWallpaperGrid();
+  }
+  updateWallpaperLoadingIndicator();
+}
+
+/* Same id-keyed, insert-only approach as syncGalleryGrid: only the wallpapers
+   not already on screen get built and inserted, in the right position;
+   everything already there — its DOM node, its already-decoded image —
+   is left completely alone. This is also what makes it safe for the FIRST
+   render (wpEl starts empty, so every wallpaper is "new") as well as every
+   later page that streams in as the visitor scrolls. */
+function wallpaperCardMarkup(w){
+  return `<div class="wp-card" data-id="${esc(w.id)}" role="button" tabindex="0" aria-label="View ${esc(w.title||'this wallpaper')} larger">
         <div class="wp-img-wrap">
           <img src="${w.thumb || w.image}" alt="${esc(w.title||'Wallpaper')}" loading="lazy" decoding="async" ${brokenImgAttr()}>
-          <button type="button" class="wp-download-btn" data-idx="${i}" aria-label="Download ${esc(w.title||'wallpaper')}" onclick="event.stopPropagation();">
+          <button type="button" class="wp-download-btn" aria-label="Download ${esc(w.title||'wallpaper')}" onclick="event.stopPropagation();">
             <span aria-hidden="true">⬇</span> Download
           </button>
         </div>
@@ -1910,21 +2438,71 @@ function renderWallpaperGrid(){
           ${w.title ? `<div class="wp-title">${esc(w.title)}</div>` : ''}
           ${w.description ? `<div class="wp-desc">${esc(w.description)}</div>` : ''}
         </div>` : ''}
-      </div>`).join('');
-    wpEl.querySelectorAll('.wp-download-btn').forEach(btn => {
-      btn.addEventListener('click', ()=> downloadWallpaper(wallpapersCache[parseInt(btn.dataset.idx)], btn));
-    });
-    wpEl.querySelectorAll('.wp-card').forEach(el => {
-      el.addEventListener('click', ()=>{
-        const w = wallpapersCache[parseInt(el.dataset.idx)];
-        if(w) openLightboxImage(w.image, w.title || '');
-      });
-    });
-  }
+      </div>`;
+}
+function wireWallpaperCard(el){
+  const downloadBtn = el.querySelector('.wp-download-btn');
+  downloadBtn.addEventListener('click', ()=>{
+    const w = wallpapersCache.find(w => w.id === el.dataset.id);
+    if(w) downloadWallpaper(w, downloadBtn);
+  });
+  const open = ()=>{
+    const w = wallpapersCache.find(w => w.id === el.dataset.id);
+    if(w) openLightboxImage(w.image, w.title || '');
+  };
+  el.addEventListener('click', open);
+  el.addEventListener('keydown', (e)=>{
+    if(e.key !== 'Enter' && e.key !== ' ') return;
+    // The download button is its own real, independently focusable <button>
+    // inside this card — pressing Enter/Space while focus is actually ON IT
+    // must only trigger its native click (download), not ALSO bubble up
+    // into this card's own handler and open the lightbox at the same time.
+    if(e.target !== el) return;
+    e.preventDefault();
+    open();
+  });
+}
+function syncWallpaperGrid(){
+  const wpEl = $('wallpaperGrid');
+  if(!wpEl) return;
+  const existing = new Map();
+  wpEl.querySelectorAll('.wp-card').forEach(n => existing.set(n.dataset.id, n));
+  const wantedIds = new Set(wallpapersCache.map(w => w.id));
+  let prev = null;
+  wallpapersCache.forEach(w => {
+    let node = existing.get(w.id);
+    if(!node){
+      const holder = document.createElement('div');
+      holder.innerHTML = wallpaperCardMarkup(w);
+      node = holder.firstElementChild;
+      wireWallpaperCard(node);
+    }
+    if(prev){
+      if(prev.nextElementSibling !== node) prev.after(node);
+    }else if(wpEl.firstElementChild !== node){
+      wpEl.prepend(node);
+    }
+    prev = node;
+  });
+  existing.forEach((node, id)=>{ if(!wantedIds.has(id)) node.remove(); });
+}
+function updateWallpaperLoadingIndicator(){
+  const wrap = $('wallpaperSpinnerWrap');
+  if(!wrap) return;
+  wrap.hidden = !wallpapersLoadingMore;
 }
 
 /* ============ Lightbox ============ */
-let lbIndex = 0;
+/* 'gallery' mode tracks the CURRENT PHOTO'S ID, not a raw array index. The
+   Gallery grid can grow or get reordered in the background at any moment —
+   the scroll-triggered pagination streaming in more pages, or a deferred
+   Hero/About/Moments photo merging in — including while the lightbox is
+   open. An index into photosCache captured at open time can point at a
+   completely different photo by the time Next/Prev is pressed once
+   photosCache has changed shape; re-finding the current photo by id on
+   every navigation can't drift like that, no matter what else about the
+   array changes in the meantime. */
+let lbCurrentId = null;
 let lbMode = 'gallery'; // 'gallery' = navigable set from photosCache, 'single' = one fixed image (e.g. wallpaper preview)
 let lbSingleItem = null;
 let lbLastFocused = null;
@@ -1939,12 +2517,18 @@ async function downloadWallpaper(w, btn){
   btn.disabled = true;
   btn.innerHTML = '<span aria-hidden="true">⬇</span> Downloading…';
   try{
-    const res = await fetch(w.image);
+    const res = await withTimeout(fetch(w.image), NET_DOWNLOAD_TIMEOUT_MS, 'wallpaper-download');
+    // data: URLs (how every wallpaper is stored today) never fail this way,
+    // but the function already anticipates URLs that could (see the comment
+    // above) — for those, an HTTP error status still resolves normally
+    // instead of rejecting, and without this check the "error" page's own
+    // body would silently get saved as if it were the wallpaper's image.
+    if(!res.ok) throw new Error('fetch-failed:' + res.status);
     const blob = await res.blob();
     const blobUrl = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = blobUrl;
-    a.download = (w.title || 'senior-27-wallpaper').replace(/[^a-z0-9-_]+/gi, '-') + '.jpg';
+    a.download = ((w.title || '').replace(/[^a-z0-9-_]+/gi, '-').replace(/^-+|-+$/g, '') || ('senior-27-wallpaper-' + w.id)) + '.jpg';
     document.body.appendChild(a);
     a.click();
     a.remove();
@@ -1959,9 +2543,9 @@ async function downloadWallpaper(w, btn){
   }
 }
 
-function openLightbox(idx){
+function openLightbox(id){
   lbMode = 'gallery';
-  lbIndex = idx;
+  lbCurrentId = id;
   showLightbox();
 }
 function openLightboxImage(src, caption){
@@ -1986,14 +2570,33 @@ function closeLightbox(){
   if(lbLastFocused && typeof lbLastFocused.focus === 'function') lbLastFocused.focus();
 }
 function updateLightbox(){
-  const item = lbMode === 'gallery' ? photosCache[lbIndex] : lbSingleItem;
+  const item = lbMode === 'gallery' ? photoById(lbCurrentId) : lbSingleItem;
+  // In gallery mode specifically, the photo can legitimately be gone by the
+  // time this runs (the Owner deleted it in another tab, say) — that's a
+  // real, if rare, case rather than a bug, so this closes quietly instead
+  // of showing a broken lightbox with nothing in it.
   if(!item){ closeLightbox(); return; }
   $('lightboxImg').src = item.image;
   $('lightboxImg').alt = item.caption || '';
   $('lbCaption').textContent = item.caption || '';
 }
-function lbGoPrev(){ if(lbMode !== 'gallery' || photosCache.length === 0) return; lbIndex = (lbIndex - 1 + photosCache.length) % photosCache.length; updateLightbox(); }
-function lbGoNext(){ if(lbMode !== 'gallery' || photosCache.length === 0) return; lbIndex = (lbIndex + 1) % photosCache.length; updateLightbox(); }
+/* Finds the current photo's live position in photosCache each time, rather
+   than trusting a number computed on a previous turn — see the comment on
+   lbCurrentId above for why that distinction matters here specifically. */
+function lbGoPrev(){
+  if(lbMode !== 'gallery' || photosCache.length === 0) return;
+  const idx = photosCache.findIndex(p => p.id === lbCurrentId);
+  const prevIdx = idx === -1 ? 0 : (idx - 1 + photosCache.length) % photosCache.length;
+  lbCurrentId = photosCache[prevIdx].id;
+  updateLightbox();
+}
+function lbGoNext(){
+  if(lbMode !== 'gallery' || photosCache.length === 0) return;
+  const idx = photosCache.findIndex(p => p.id === lbCurrentId);
+  const nextIdx = idx === -1 ? 0 : (idx + 1) % photosCache.length;
+  lbCurrentId = photosCache[nextIdx].id;
+  updateLightbox();
+}
 
 $('lbClose').addEventListener('click', closeLightbox);
 $('lightbox').addEventListener('click', (e)=>{ if(e.target.id === 'lightbox') closeLightbox(); });
@@ -2004,6 +2607,21 @@ document.addEventListener('keydown', (e)=>{
   if(e.key === 'Escape') closeLightbox();
   else if(e.key === 'ArrowLeft') lbGoPrev();
   else if(e.key === 'ArrowRight') lbGoNext();
+  else if(e.key === 'Tab'){
+    // Minimal focus trap: while the lightbox is open, Tab should only ever
+    // cycle among its OWN buttons, never escape to whatever sits behind the
+    // overlay in the page's normal tab order. offsetParent === null filters
+    // out lbPrev/lbNext when single-mode's CSS has display:none'd them.
+    const focusable = Array.from($('lightbox').querySelectorAll('button'))
+      .filter(el => el.offsetParent !== null);
+    if(focusable.length === 0) return;
+    const first = focusable[0], last = focusable[focusable.length - 1];
+    if(e.shiftKey && document.activeElement === first){
+      e.preventDefault(); last.focus();
+    }else if(!e.shiftKey && document.activeElement === last){
+      e.preventDefault(); first.focus();
+    }
+  }
 });
 
 /* ============ Mobile nav ============ */
@@ -2038,27 +2656,42 @@ document.querySelectorAll('.main-nav a').forEach(a => a.addEventListener('click'
    quietly leaving the visitor in the wrong place. It never fights a scroll
    the visitor starts themselves: any manual scroll/swipe/key input cancels
    the correction immediately. */
+/* Tracks whichever scrollToSection call is currently active, if any, so a
+   new click can cancel it cleanly before starting its own — otherwise two
+   correction loops from two quick clicks would run at once, each nudging
+   the page toward a DIFFERENT target and fighting one another. */
+let cancelActiveScroll = null;
+
 function scrollToSection(id){
   const el = document.getElementById(id);
   if(!el) return;
+  if(cancelActiveScroll) cancelActiveScroll();
+
   const isAligned = ()=> Math.abs(el.getBoundingClientRect().top) < 3;
   el.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
-  let cancelled = false;
   let checks = 0;
   let goodStreak = 0;
   const MAX_CHECKS = 6;         // ~2.1s total — comfortably covers a slow image decode
   const CHECK_EVERY_MS = 350;
 
-  const cancel = ()=>{ cancelled = true; clearInterval(timer); };
   // Any input that looks like the visitor taking over the scroll themselves
-  // stops this immediately — it should never fight a manual scroll.
-  ['wheel', 'touchstart', 'keydown'].forEach(evt =>
-    window.addEventListener(evt, cancel, { once: true, passive: true })
-  );
+  // stops this immediately — it should never fight a manual scroll. These
+  // are removed explicitly in cancel() below (not left to {once:true} alone)
+  // so a click that finishes normally — the common case, since most clicks
+  // never trigger a wheel/touch/key event before settling on their own —
+  // doesn't leave three armed listeners sitting on window forever waiting
+  // for an input that may never come.
+  const watchEvents = ['wheel', 'touchstart', 'keydown'];
+  const cancel = ()=>{
+    clearInterval(timer);
+    watchEvents.forEach(evt => window.removeEventListener(evt, cancel));
+    if(cancelActiveScroll === cancel) cancelActiveScroll = null;
+  };
+  cancelActiveScroll = cancel;
+  watchEvents.forEach(evt => window.addEventListener(evt, cancel, { passive: true }));
 
   const timer = setInterval(()=>{
-    if(cancelled) return;
     checks++;
     if(isAligned()){
       goodStreak++;
@@ -2070,15 +2703,15 @@ function scrollToSection(id){
     if(checks >= MAX_CHECKS) cancel();
   }, CHECK_EVERY_MS);
 }
-document.querySelectorAll('a[href^="#"]').forEach(a => {
-  const id = a.getAttribute('href').slice(1);
-  if(!id) return;
-  a.addEventListener('click', (e)=>{
-    if(!document.getElementById(id)) return;  // no matching section — let the browser do whatever it would normally do
-    e.preventDefault();
-    scrollToSection(id);
-    if(window.history && history.pushState) history.pushState(null, '', '#' + id);
-  });
+document.addEventListener('click', (e)=>{
+  const a = e.target.closest ? e.target.closest('a[href^="#"]') : null;
+  if(!a) return;
+  const href = a.getAttribute('href') || '';
+  const id = href.slice(1);
+  if(!id || !document.getElementById(id)) return;
+  e.preventDefault();
+  scrollToSection(id);
+  if(window.history && history.pushState) history.pushState(null, '', '#' + id);
 });
 
 /* ============ Owner auth ============ */
@@ -2112,15 +2745,27 @@ function closePassModal(){
    the overlay is only opened once it has actually arrived. If the fetch
    fails, the Dashboard stays closed rather than opening onto an incomplete
    list that could be reordered or deleted from by mistake. */
+/* The Dashboard is the one place that genuinely needs every photo AND every
+   wallpaper at once — reordering either one swaps sortOrder between
+   neighbours, so acting on a partial list could put items in the wrong
+   order. Both are fetched here, in parallel, on open, and the overlay is
+   only opened once both have actually arrived. If either fetch fails, the
+   Dashboard stays closed rather than opening onto an incomplete list that
+   could be reordered or deleted from by mistake. */
 async function openOwnerDashboard(){
-  if(!galleryFullyLoaded){
+  const needsPhotos = !galleryFullyLoaded;
+  const needsWallpapers = !wallpapersFullyLoaded;
+  if(needsPhotos || needsWallpapers){
     try{
-      await withBusyButton(ownerBtn, 'Loading photos…', loadAllPhotosForAdmin);
+      await withBusyButton(ownerBtn, 'Loading…', ()=> Promise.all([
+        needsPhotos ? loadAllPhotosForAdmin() : Promise.resolve(),
+        needsWallpapers ? loadAllWallpapersForAdmin() : Promise.resolve(),
+      ]));
     }catch(e){
-      showToast('Could not load your photos — check your connection and try again', 'error');
+      showToast('Could not load your content — check your connection and try again', 'error');
       return;
     }
-    renderPublicSite();   // the page behind now has the complete gallery too
+    renderPublicSite();   // the page behind now has the complete gallery and wallpapers too
   }
   $('dashOverlay').classList.add('open');
   renderDashboard();
@@ -2154,9 +2799,9 @@ $('passSubmit').addEventListener('click', async ()=>{
   const btn = $('passSubmit');
   btn.disabled = true; btn.textContent = 'Checking...';
   try{
-    const cred = await auth.signInWithEmailAndPassword(OWNER_EMAIL, val);
+    const cred = await withTimeout(auth.signInWithEmailAndPassword(OWNER_EMAIL, val), NET_AUTH_TIMEOUT_MS, 'owner-login');
     if(cred.user.uid !== OWNER_UID){
-      await auth.signOut();
+      await withTimeout(auth.signOut(), 10000, 'owner-reject').catch(()=>{});
       passError.textContent = 'Wrong passcode';
       passError.style.display = 'block';
     }else{
@@ -2164,7 +2809,10 @@ $('passSubmit').addEventListener('click', async ()=>{
       showToast('Welcome back, owner', 'success');
     }
   }catch(err){
-    passError.textContent = 'Wrong passcode';
+    const c = err && err.code;
+    passError.textContent = (c === 'auth/too-many-requests') ? 'Too many attempts — wait a few minutes and try again'
+      : (c === 'auth/network-request-failed' || isTimeoutError(err)) ? 'Connection problem — check your internet and try again'
+      : 'Wrong passcode';
     passError.style.display = 'block';
   }finally{
     btn.disabled = false; btn.textContent = 'Unlock';
@@ -2190,7 +2838,7 @@ $('dashCloseBtn').addEventListener('click', ()=>{
 });
 $('dashLogoutBtn').addEventListener('click', async ()=>{
   if(dashDirty && !confirm('You have unsaved changes. Log out anyway?')) return;
-  await auth.signOut();
+  await withTimeout(auth.signOut(), 10000, 'owner-logout').catch(()=>{});
   $('dashOverlay').classList.remove('open');
   showToast('Logged out');
 });
@@ -2277,7 +2925,7 @@ wireSuggestBtn('useSuggestFooterTagline', 'in_footerTagline', 'Memories today, l
 function renderHeroMainPicker(){
   const el = $('heroMainPicker');
   if(photosCache.length === 0){ el.innerHTML = '<p style="font-size:12.5px; color:var(--ink-soft);">Upload photos in the Gallery tab first.</p>'; return; }
-  el.innerHTML = photosCache.map(p => `<img src="${p.thumb || p.image}" data-id="${p.id}" alt="${esc(p.caption||'')}" ${brokenImgAttr()} class="${p.id===selectedHeroMainId?'selected':''}">`).join('');
+  el.innerHTML = photosCache.map(p => `<img src="${p.thumb || p.image}" data-id="${esc(p.id)}" alt="${esc(p.caption||'')}" ${brokenImgAttr()} class="${p.id===selectedHeroMainId?'selected':''}">`).join('');
   el.querySelectorAll('img').forEach(img => img.addEventListener('click', ()=>{
     selectedHeroMainId = img.dataset.id;
     renderHeroMainPicker();
@@ -2286,7 +2934,7 @@ function renderHeroMainPicker(){
 function renderHeroThumbsPicker(){
   const el = $('heroThumbsPicker');
   if(photosCache.length === 0){ el.innerHTML = '<p style="font-size:12.5px; color:var(--ink-soft);">Upload photos in the Gallery tab first.</p>'; return; }
-  el.innerHTML = photosCache.map(p => `<img src="${p.thumb || p.image}" data-id="${p.id}" alt="${esc(p.caption||'')}" ${brokenImgAttr()} class="${selectedHeroThumbIds.includes(p.id)?'selected':''}">`).join('');
+  el.innerHTML = photosCache.map(p => `<img src="${p.thumb || p.image}" data-id="${esc(p.id)}" alt="${esc(p.caption||'')}" ${brokenImgAttr()} class="${selectedHeroThumbIds.includes(p.id)?'selected':''}">`).join('');
   el.querySelectorAll('img').forEach(img => img.addEventListener('click', ()=>{
     const id = img.dataset.id;
     const i = selectedHeroThumbIds.indexOf(id);
@@ -2301,7 +2949,7 @@ function renderHeroThumbsPicker(){
 function renderAboutImagePicker(){
   const el = $('aboutImagePicker');
   if(photosCache.length === 0){ el.innerHTML = '<p style="font-size:12.5px; color:var(--ink-soft);">Upload photos in the Gallery tab first.</p>'; return; }
-  el.innerHTML = photosCache.map(p => `<img src="${p.thumb || p.image}" data-id="${p.id}" alt="${esc(p.caption||'')}" ${brokenImgAttr()} class="${p.id===selectedAboutImageId?'selected':''}">`).join('');
+  el.innerHTML = photosCache.map(p => `<img src="${p.thumb || p.image}" data-id="${esc(p.id)}" alt="${esc(p.caption||'')}" ${brokenImgAttr()} class="${p.id===selectedAboutImageId?'selected':''}">`).join('');
   el.querySelectorAll('img').forEach(img => img.addEventListener('click', ()=>{
     selectedAboutImageId = img.dataset.id;
     renderAboutImagePicker();
@@ -2322,7 +2970,7 @@ $('clearAboutImageBtn').addEventListener('click', ()=>{
 
 $('saveHomeBtn').addEventListener('click', ()=> withBusyButton($('saveHomeBtn'), 'Saving…', async ()=>{
   try{
-    await SETTINGS.doc('home').set({
+    await setDocSafely(SETTINGS.doc('home'), {
       heroEyebrow: $('in_heroEyebrow').value.trim(),
       heroTitle: $('in_heroTitle').value.trim(),
       heroDescription: $('in_heroDescription').value.trim(),
@@ -2330,7 +2978,7 @@ $('saveHomeBtn').addEventListener('click', ()=> withBusyButton($('saveHomeBtn'),
       heroButtonUrl: $('in_heroButtonUrl').value.trim(),
       heroImageId: selectedHeroMainId || null,
       heroThumbIds: selectedHeroThumbIds
-    }, { merge:true });
+    });
     await loadSettings();
     renderPublicSite();
     dashDirty = false;
@@ -2340,14 +2988,14 @@ $('saveHomeBtn').addEventListener('click', ()=> withBusyButton($('saveHomeBtn'),
 
 $('saveAboutBtn').addEventListener('click', ()=> withBusyButton($('saveAboutBtn'), 'Saving…', async ()=>{
   try{
-    await SETTINGS.doc('about').set({
+    await setDocSafely(SETTINGS.doc('about'), {
       label: $('in_aboutLabel').value.trim(),
       heading: $('in_aboutHeading').value.trim(),
       story: $('in_aboutStory').value.trim(),
       buttonText: $('in_aboutButtonText').value.trim(),
       buttonUrl: $('in_aboutButtonUrl').value.trim(),
       imageId: selectedAboutImageId || null
-    }, { merge:true });
+    });
     await loadSettings();
     renderPublicSite();
     dashDirty = false;
@@ -2357,10 +3005,10 @@ $('saveAboutBtn').addEventListener('click', ()=> withBusyButton($('saveAboutBtn'
 
 $('saveSettingsBtn').addEventListener('click', ()=> withBusyButton($('saveSettingsBtn'), 'Saving…', async ()=>{
   try{
-    await SETTINGS.doc('site').set({
+    await setDocSafely(SETTINGS.doc('site'), {
       siteTitle: $('in_siteTitle').value.trim(),
       footerTagline: $('in_footerTagline').value.trim()
-    }, { merge:true });
+    });
     await loadSettings();
     renderPublicSite();
     dashDirty = false;
@@ -2377,7 +3025,7 @@ function renderDashGalleryGrid(){
     return;
   }
   el.innerHTML = photosCache.map((p, i) => `
-    <div class="dash-photo-tile" data-id="${p.id}">
+    <div class="dash-photo-tile" data-id="${esc(p.id)}">
       <img src="${p.thumb || p.image}" alt="${esc(p.caption||'')}" ${brokenImgAttr()}>
       <div class="tile-flags">
         ${p.isFeatured ? '<span class="flag-badge">Featured</span>' : ''}
@@ -2390,8 +3038,8 @@ function renderDashGalleryGrid(){
         <button class="tile-btn" data-act="home" title="Toggle show on home">⌂</button>
         <button class="tile-btn" data-act="delete" title="Delete">×</button>
       </div>
-      <input type="text" class="dash-caption-input" data-id="${p.id}" placeholder="Caption..." value="${esc(p.caption||'')}">
-      <input type="date" class="dash-date-input" data-id="${p.id}" value="${p.photoDate||''}" title="Photo date — used by any Moment made from this photo">
+      <input type="text" class="dash-caption-input" data-id="${esc(p.id)}" placeholder="Caption..." value="${esc(p.caption||'')}">
+      <input type="date" class="dash-date-input" data-id="${esc(p.id)}" value="${esc(p.photoDate||'')}" title="Photo date — used by any Moment made from this photo">
     </div>`).join('');
 
   el.querySelectorAll('.dash-photo-tile').forEach((tile, i) => {
@@ -2432,15 +3080,11 @@ async function movePhoto(id, dir){
   galleryReorderBusy = true;
   setListBusy('dashGalleryGrid', true);
   try{
-    /* The two writes only ever touch a `sortOrder` number each, so they're
-       independent and safe to fire together (Promise.all) instead of one
-       after another — roughly half the round-trip time on a slow
-       connection. withTimeout means a stuck connection surfaces a clear
-       error instead of leaving the buttons looking frozen forever. */
-    await withTimeout(Promise.all([
-      PHOTOS.doc(a.id).update({ sortOrder: bOrder }),
-      PHOTOS.doc(b.id).update({ sortOrder: aOrder })
-    ]), 15000, 'photo-reorder');
+    /* Atomic swap — see reorderPair's comment for why this replaced two
+       independent .update() calls fired through Promise.all: those could
+       partially succeed on a dropped connection and leave both photos with
+       the same sortOrder, silently. */
+    await reorderPair(PHOTOS, a, b, aOrder, bOrder, 15000, 'photo-reorder');
     /* Update the already-in-memory cache directly instead of re-fetching the
        whole collection. Each photo document can carry close to 1MB of
        base64 image+thumb data, so loadPhotos()/loadAllPhotosForAdmin()
@@ -2468,7 +3112,7 @@ async function togglePhotoFlag(id, field){
   if(!p) return;
   const newVal = !p[field];
   try{
-    await withTimeout(PHOTOS.doc(id).update({ [field]: newVal }), 15000, 'photo-flag');
+    await updateDocSafely(PHOTOS.doc(id), { [field]: newVal }, NET_WRITE_TIMEOUT_MS, 'photo-flag');
     // Update in-memory instead of re-fetching every photo (see movePhoto
     // above for why that reload was expensive) — this is a single boolean.
     p[field] = newVal;
@@ -2486,7 +3130,7 @@ async function updatePhotoCaption(id, caption){
   const trimmed = caption.trim();
   const p = photoById(id);
   try{
-    await withTimeout(PHOTOS.doc(id).update({ caption: trimmed }), 15000, 'photo-caption');
+    await updateDocSafely(PHOTOS.doc(id), { caption: trimmed }, NET_WRITE_TIMEOUT_MS, 'photo-caption');
     if(p) p.caption = trimmed;
     renderPublicSite();
     showToast('Caption saved', 'success');
@@ -2500,9 +3144,17 @@ async function updatePhotoCaption(id, caption){
 }
 async function updatePhotoDate(id, dateStr){
   const value = dateStr || '';
+  // A native <input type="date"> normally can't produce anything but a real
+  // calendar date or empty, but this guards the write itself either way —
+  // cheap, and it's the one place that decides what actually reaches
+  // Firestore, regardless of how a bad value got into the field.
+  if(value && !isValidDateStr(value)){
+    showToast('That date doesn\'t exist — check the day and month', 'error');
+    return;
+  }
   const p = photoById(id);
   try{
-    await withTimeout(PHOTOS.doc(id).update({ photoDate: value }), 15000, 'photo-date');
+    await updateDocSafely(PHOTOS.doc(id), { photoDate: value }, NET_WRITE_TIMEOUT_MS, 'photo-date');
     if(p) p.photoDate = value;
     renderPublicSite();
     renderDashMomentsList(); // any Moment built from this photo shows the new date as its default
@@ -2526,25 +3178,127 @@ async function deletePhoto(id){
   if(!confirm('Delete this photo? This cannot be undone.')) return;
   try{
     const photo = photosCache.find(p => p.id === id);
-    await PHOTOS.doc(id).delete();
+    await deleteDocSafely(PHOTOS.doc(id), NET_WRITE_TIMEOUT_MS, 'photo-delete');
     if(photo) deleteStorageFileIfApplicable(photo.image);
-    await loadAll();
+    /* Was `await loadAll()` — the PUBLIC loader, which resets photosCache to
+       just the first paginated page (5 photos) and flips galleryFullyLoaded
+       back to false. The Owner's Dashboard was open and relying on the
+       COMPLETE set at that exact moment (openOwnerDashboard guarantees this
+       before the overlay ever opens) — calling the public loader here would
+       silently truncate the Dashboard's own photo grid down to 5 items right
+       in front of the Owner, mid-session, hiding every other photo from
+       reorder/edit/delete until the Dashboard was closed and reopened.
+       Removing the one deleted photo from the already-complete in-memory
+       cache — exactly how movePhoto/togglePhotoFlag/updatePhotoCaption
+       already do it — keeps the Dashboard's full list intact and is also
+       faster, since it needs no re-fetch at all. */
+    photosCache = photosCache.filter(p => p.id !== id);
+    try{
+      const ids = Array.isArray(homeSettings.heroThumbIds) ? homeSettings.heroThumbIds : [];
+      if(homeSettings.heroImageId === id || ids.includes(id)){
+        const patch = { heroImageId: homeSettings.heroImageId === id ? null : (homeSettings.heroImageId || null), heroThumbIds: ids.filter(x => x !== id) };
+        await updateDocSafely(SETTINGS.doc('home'), patch);
+        Object.assign(homeSettings, patch);
+      }
+      if(aboutSettings.imageId === id){ await updateDocSafely(SETTINGS.doc('about'), { imageId: null }); aboutSettings.imageId = null; }
+      siteSettings.totalPhotosCount = photosCache.length;
+      SETTINGS.doc('site').set({ totalPhotosCount: photosCache.length }, { merge:true }).catch(()=>{});
+    }catch(_){ /* the photo itself is already deleted; references can be re-saved from the Dashboard */ }
+    // A Moment can be built from any photo; if this was the one it used,
+    // the Moment doesn't disappear (its title/caption/date stay put) but its
+    // image slot now safely renders empty — same as any other Moment whose
+    // photo never loaded — rather than pointing at a dangling id.
     renderDashGalleryGrid();
+    renderDashMomentsList();
+    renderPublicSite();
     showToast('Photo deleted', 'success');
-  }catch(e){ showToast('Could not delete photo', 'error'); }
+  }catch(e){
+    showToast(
+      e && String(e.message).startsWith('timeout')
+        ? 'Taking too long — check your connection and try again'
+        : 'Could not delete photo', 'error'
+    );
+  }
 }
 
 /* Direct "upload as background" shortcuts for Hero and About: uploads straight
    into the Photos collection (so it also appears in the Gallery, nothing is
    duplicated behind the scenes) and auto-selects it for that section. Nothing
    is written to homeSettings/aboutSettings until the Owner hits Save. */
-/* Wraps a promise with a hard timeout so a slow/stuck connection shows a clear
-   error instead of leaving the UI stuck on "Uploading…" forever. */
-function withTimeout(promise, ms, label){
-  return Promise.race([
-    promise,
-    new Promise((_, reject)=> setTimeout(()=> reject(new Error('timeout:' + (label||''))), ms))
-  ]);
+/* Swaps sortOrder between two documents ATOMICALLY via a Firestore batch —
+   either both writes land or neither does. The previous version fired the
+   two .update() calls independently through Promise.all: safe on a normal
+   connection, but if the connection dropped between the two (one write
+   already accepted by the server, the other never arriving, or vice versa)
+   the two documents could be left with the SAME sortOrder — a duplicate
+   that nothing before this would ever notice or repair. A batch can't fail
+   that way: Firestore commits every write in it together or none at all.
+
+   On a timeout specifically (as opposed to a genuine rejection), this also
+   re-reads both documents to find out what actually happened server-side —
+   a batch that reports "timed out" locally may already have committed by
+   the time the caller gives up waiting, and treating an ambiguous timeout
+   as a confident failure is exactly what leaves the UI and the database
+   quietly disagreeing about whether the swap happened. */
+/* A single check right when the timeout fires only catches the case where
+   the server had already responded and just the acknowledgement was slow to
+   arrive. A write that's still genuinely in flight at that exact instant —
+   common on a slow mobile connection, which is exactly when a 15-20s
+   timeout is likeliest to fire in the first place — needs a little more
+   time to actually land before a check can see it. This retries the check a
+   few times with short pauses rather than giving up after one look, without
+   turning a real, permanent failure (offline, rejected) into a long wait:
+   `check` returning false quickly and consistently still fails fast. */
+async function reconcileAfterTimeout(check, attempts, delayMs){
+  for(let i = 0; i < attempts; i++){
+    await sleep(delayMs);
+    try{ if(await withTimeout(check(), 7000, 'reconcile-check')) return true; }catch(_){ /* try again */ }
+  }
+  return false;
+}
+
+async function reorderPair(collectionRef, a, b, aOrder, bOrder, timeoutMs, label){
+  const batch = db.batch();
+  batch.update(collectionRef.doc(a.id), { sortOrder: bOrder });
+  batch.update(collectionRef.doc(b.id), { sortOrder: aOrder });
+  try{
+    await withTimeout(batch.commit(), timeoutMs, label);
+  }catch(e){
+    if(e && String(e.message).startsWith('timeout')){
+      const landed = await reconcileAfterTimeout(async ()=>{
+        const [aDoc, bDoc] = await Promise.all([collectionRef.doc(a.id).get(), collectionRef.doc(b.id).get()]);
+        const aNow = aDoc.exists ? aDoc.data().sortOrder : undefined;
+        const bNow = bDoc.exists ? bDoc.data().sortOrder : undefined;
+        return aNow === bOrder && bNow === aOrder;
+      }, 3, 1500);
+      if(landed) return;  // it actually went through — not a real failure
+    }
+    throw e;
+  }
+}
+
+/* Creates a document with a client-generated id (instead of .add(), which
+   always mints a brand-new id) so that if the write TIMES OUT locally, the
+   exact id it was writing to is already known. On that specific case, this
+   checks whether the write actually landed on the server anyway before
+   reporting failure — a plain timeout by itself proves nothing either way,
+   and treating it as a confident failure is what used to make retrying an
+   upload that "failed" (but had actually gone through moments later) create
+   a genuine duplicate photo/wallpaper. A real failure (offline, rejected,
+   truly never arrived) still throws exactly as before, so the existing
+   error toasts and retry-by-reselecting-the-file behavior are unchanged. */
+async function addDocSafely(collectionRef, data, timeoutMs, label){
+  const ref = collectionRef.doc();
+  try{
+    await withTimeout(ref.set(data), timeoutMs, label);
+    return ref;
+  }catch(e){
+    if(e && String(e.message).startsWith('timeout')){
+      const landed = await reconcileAfterTimeout(async ()=> (await ref.get()).exists, 3, 1500);
+      if(landed) return ref;  // it actually went through
+    }
+    throw e;
+  }
 }
 
 async function uploadAsBackground(dropId, inputId, onDone){
@@ -2558,15 +3312,16 @@ async function uploadAsBackground(dropId, inputId, onDone){
   try{
     const { dataUrl, width, height, thumb, thumbV } = await fileToCompressed(file, 1300, 0.85);
     let maxOrder = photosCache.reduce((m,p)=> Math.max(m, p.sortOrder ?? 0), 0);
-    const ref = await withTimeout(PHOTOS.add({
+    const ref = await addDocSafely(PHOTOS, {
       image: dataUrl, thumb, thumbV, caption: '', width, height,
       isFeatured: false, showOnHome: false, sortOrder: maxOrder + 1,
       createdAt: Date.now()
-    }), 20000, 'photo-save');
+    }, 20000, 'photo-save');
     // Uploading happens inside the Dashboard, which always holds the complete
     // set — refreshing with the paged public loader here would shrink it back
     // to 5 photos and make reordering act on the wrong list.
     await loadAllPhotosForAdmin();
+    renderDashGalleryGrid(); renderMomentAddPicker(); renderHeroThumbsPicker();
     onDone(ref.id);
     markDashDirty();
     showToast('Photo uploaded — click Save to apply', 'success');
@@ -2613,50 +3368,61 @@ $('galleryFileInput').addEventListener('change', async ()=>{
   drop.dataset.busy = '1';
   drop.textContent = 'Uploading ' + files.length + ' photo(s)…';
   showToast('Uploading ' + files.length + ' photo(s)...');
-  let maxOrder = photosCache.reduce((m,p)=> Math.max(m, p.sortOrder ?? 0), 0);
   let failCount = 0;
-  for(const file of files){
-    try{
-      const { dataUrl, width, height, thumb, thumbV } = await fileToCompressed(file, 1200, 0.85);
-      maxOrder += 1;
-      await withTimeout(PHOTOS.add({
-        image: dataUrl, thumb, thumbV, caption: '', width, height,
-        isFeatured: false, showOnHome: false, sortOrder: maxOrder,
-        createdAt: Date.now()
-      }), 20000, 'photo-save');
-    }catch(e){ failCount++; }
-  }
-  $('galleryFileInput').value = '';
-  // Uploading happens inside the Dashboard, which always holds the complete
-  // set — refreshing with the paged public loader here would shrink it back
-  // to 5 photos and make reordering act on the wrong list.
-  await loadAllPhotosForAdmin();
-  renderDashGalleryGrid();
-  renderPublicSite();
-  drop.dataset.busy = '0';
-  drop.textContent = originalLabel;
-  if(failCount > 0){
-    showToast(failCount + ' of ' + files.length + ' photo(s) failed — check your connection and try again', 'error');
-  }else{
-    showToast('Upload complete', 'success');
+  try{
+    let maxOrder = photosCache.reduce((m,p)=> Math.max(m, p.sortOrder ?? 0), 0);
+    for(const file of files){
+      try{
+        const { dataUrl, width, height, thumb, thumbV } = await fileToCompressed(file, 1200, 0.85);
+        maxOrder += 1;
+        await addDocSafely(PHOTOS, {
+          image: dataUrl, thumb, thumbV, caption: '', width, height,
+          isFeatured: false, showOnHome: false, sortOrder: maxOrder,
+          createdAt: Date.now()
+        }, 20000, 'photo-save');
+      }catch(e){ failCount++; }
+    }
+    $('galleryFileInput').value = '';
+    await loadAllPhotosForAdmin();
+    renderDashGalleryGrid();
+    renderPublicSite();
+    if(failCount > 0){
+      showToast(failCount + ' of ' + files.length + ' photo(s) failed — check your connection and try again', 'error');
+    }else{
+      showToast('Upload complete', 'success');
+    }
+  }catch(e){
+    showToast(isTimeoutError(e) ? 'Taking too long — check your connection and try again' : 'Could not refresh the gallery after upload', 'error');
+  }finally{
+    drop.dataset.busy = '0';
+    drop.textContent = originalLabel;
   }
 });
 
 /* ============ Moments management ============ */
+let momentAddBusy = false;
 function renderMomentAddPicker(){
   const el = $('momentAddPicker');
   if(photosCache.length === 0){ el.innerHTML = '<p style="font-size:12.5px; color:var(--ink-soft);">Upload photos in the Gallery tab first.</p>'; return; }
-  el.innerHTML = photosCache.map(p => `<img src="${p.thumb || p.image}" data-id="${p.id}" alt="${esc(p.caption||'')}" ${brokenImgAttr()}>`).join('');
+  el.innerHTML = photosCache.map(p => `<img src="${p.thumb || p.image}" data-id="${esc(p.id)}" alt="${esc(p.caption||'')}" ${brokenImgAttr()}>`).join('');
   el.querySelectorAll('img').forEach(img => img.addEventListener('click', async ()=>{
+    // Without this, clicking several thumbnails in quick succession (easy to
+    // do while impatient, or on a slow connection where nothing visibly
+    // happens for a moment) could fire more than one MOMENTS.add() before
+    // the first had a chance to finish and disable the picker.
+    if(momentAddBusy) return;
+    momentAddBusy = true;
+    el.classList.add('busy');
     const id = img.dataset.id;
     let maxOrder = momentsCache.reduce((m,x)=> Math.max(m, x.sortOrder ?? 0), 0);
     try{
-      await MOMENTS.add({ photoId:id, title:'', caption:'', sortOrder: maxOrder + 1 });
+      await addDocSafely(MOMENTS, { photoId:id, title:'', caption:'', sortOrder: maxOrder + 1 }, NET_WRITE_TIMEOUT_MS, 'moment-add');
       await loadMoments();
       renderDashMomentsList();
       renderPublicSite();
       showToast('Moment added — edit its title/caption below', 'success');
     }catch(e){ showToast('Could not add moment', 'error'); }
+    finally{ momentAddBusy = false; el.classList.remove('busy'); }
   }));
 }
 function renderDashMomentsList(){
@@ -2668,13 +3434,13 @@ function renderDashMomentsList(){
     const hasOverride = !!m.dateOverride;
     const dateValue = hasOverride ? m.dateOverride : photoDate;
     return `
-    <div class="dash-list-row" data-id="${m.id}">
+    <div class="dash-list-row" data-id="${esc(m.id)}">
       ${p ? `<img src="${p.thumb || p.image}" alt="${esc(m.title||'')}" ${brokenImgAttr()}>` : `<div style="width:60px;height:60px;flex-shrink:0;background:var(--card);"></div>`}
       <div class="row-fields">
         <input type="text" class="m-title" placeholder="Title" value="${esc(m.title||'')}">
         <input type="text" class="m-caption" placeholder="Caption" value="${esc(m.caption||'')}">
         <div class="m-date-row">
-          <input type="date" class="m-date" value="${dateValue}">
+          <input type="date" class="m-date" value="${esc(dateValue)}">
           ${hasOverride ? `<button type="button" class="m-date-reset" data-act="reset-date" title="Go back to using the photo's date">${photoDate ? `Use photo's date (${esc(formatMomentDate(photoDate))})` : 'Clear custom date'}</button>` : ''}
         </div>
         ${hasOverride ? `<span class="m-date-hint">Custom date for this moment only.${photoDate ? ` This photo's own date in Gallery is ${esc(formatMomentDate(photoDate))}.` : ' This photo has no date set in Gallery yet.'}</span>` : ''}
@@ -2688,16 +3454,21 @@ function renderDashMomentsList(){
   }).join('');
   el.querySelectorAll('.dash-list-row').forEach(row => {
     const id = row.dataset.id;
-    row.querySelector('.m-title').addEventListener('change', (e)=> MOMENTS.doc(id).update({title: e.target.value.trim()}).then(()=>{loadMoments().then(renderPublicSite); showToast('Saved','success');}));
-    row.querySelector('.m-caption').addEventListener('change', (e)=> MOMENTS.doc(id).update({caption: e.target.value.trim()}).then(()=>{loadMoments().then(renderPublicSite); showToast('Saved','success');}));
+    row.querySelector('.m-title').addEventListener('change', (e)=> updateDocSafely(MOMENTS.doc(id), {title: e.target.value.trim()}, NET_WRITE_TIMEOUT_MS, 'moment-title').then(()=>{loadMoments().then(renderPublicSite); showToast('Saved','success');}).catch(err=> showToast(isTimeoutError(err) ? 'Taking too long — check your connection and try again' : 'Could not save title', 'error')));
+    row.querySelector('.m-caption').addEventListener('change', (e)=> updateDocSafely(MOMENTS.doc(id), {caption: e.target.value.trim()}, NET_WRITE_TIMEOUT_MS, 'moment-caption').then(()=>{loadMoments().then(renderPublicSite); showToast('Saved','success');}).catch(err=> showToast(isTimeoutError(err) ? 'Taking too long — check your connection and try again' : 'Could not save caption', 'error')));
     row.querySelector('.m-date').addEventListener('change', (e)=>{
-      MOMENTS.doc(id).update({ dateOverride: e.target.value || '' })
+      const value = e.target.value || '';
+      if(value && !isValidDateStr(value)){
+        showToast('That date doesn\'t exist — check the day and month', 'error');
+        return;
+      }
+      updateDocSafely(MOMENTS.doc(id), { dateOverride: value }, NET_WRITE_TIMEOUT_MS, 'moment-date')
         .then(()=> loadMoments()).then(()=>{ renderPublicSite(); renderDashMomentsList(); showToast('Date saved', 'success'); })
         .catch(()=> showToast('Could not save date', 'error'));
     });
     const resetBtn = row.querySelector('[data-act=reset-date]');
     if(resetBtn) resetBtn.addEventListener('click', ()=>{
-      MOMENTS.doc(id).update({ dateOverride: '' })
+      updateDocSafely(MOMENTS.doc(id), { dateOverride: '' }, NET_WRITE_TIMEOUT_MS, 'moment-date-reset')
         .then(()=> loadMoments()).then(()=>{ renderPublicSite(); renderDashMomentsList(); showToast('Reverted to photo date', 'success'); })
         .catch(()=> showToast('Could not update date', 'error'));
     });
@@ -2706,7 +3477,7 @@ function renderDashMomentsList(){
       const btn = e.target;
       btn.disabled = true; btn.textContent = 'Removing…';
       try{
-        await withTimeout(MOMENTS.doc(id).delete(), 15000, 'moment-delete');
+        await deleteDocSafely(MOMENTS.doc(id), NET_WRITE_TIMEOUT_MS, 'moment-delete');
         await loadMoments(); renderDashMomentsList(); renderPublicSite();
         showToast('Moment removed', 'success');
       }catch(err){
@@ -2734,10 +3505,8 @@ async function moveMoment(id, dir){
   momentsReorderBusy = true;
   setListBusy('dashMomentsList', true);
   try{
-    await withTimeout(Promise.all([
-      MOMENTS.doc(a.id).update({ sortOrder: bOrder }),
-      MOMENTS.doc(b.id).update({ sortOrder: aOrder })
-    ]), 15000, 'moment-reorder');
+    // Atomic swap — see reorderPair's comment (same reasoning as movePhoto).
+    await reorderPair(MOMENTS, a, b, aOrder, bOrder, 15000, 'moment-reorder');
     // Same reasoning as movePhoto above: update the in-memory cache instead
     // of re-fetching the whole Moments collection for a simple 2-item swap.
     a.sortOrder = bOrder; b.sortOrder = aOrder;
@@ -2782,9 +3551,9 @@ $('wallpaperFileInput').addEventListener('change', async ()=>{
        after the fact; re-uploading the original file is the fix for those. */
     const { dataUrl, thumb, thumbV } = await fileToCompressed(file, 1200, 0.87);
     let maxOrder = wallpapersCache.reduce((m,w)=> Math.max(m, w.sortOrder ?? 0), 0);
-    await withTimeout(WALLPAPERS.add({ image: dataUrl, thumb, thumbV, title:'', description:'', sortOrder: maxOrder + 1, createdAt: Date.now() }), 20000, 'wallpaper-save');
+    await addDocSafely(WALLPAPERS, { image: dataUrl, thumb, thumbV, title:'', description:'', sortOrder: maxOrder + 1, createdAt: Date.now() }, 20000, 'wallpaper-save');
     $('wallpaperFileInput').value = '';
-    await loadWallpapers();
+    await loadAllWallpapersForAdmin();
     renderDashWallpaperList();
     renderPublicSite();
     showToast('Wallpaper uploaded', 'success');
@@ -2806,7 +3575,7 @@ function renderDashWallpaperList(){
   backfillThumbs(WALLPAPERS, wallpapersCache); // fire-and-forget; no-ops once everything has a thumb
   if(wallpapersCache.length === 0){ el.innerHTML = '<div class="empty-state"><span class="eyebrow">No wallpapers yet</span><p>Upload one above.</p></div>'; return; }
   el.innerHTML = wallpapersCache.map(w => `
-    <div class="dash-list-row" data-id="${w.id}">
+    <div class="dash-list-row" data-id="${esc(w.id)}">
       <img src="${w.thumb || w.image}" alt="${esc(w.title||'')}" ${brokenImgAttr()}>
       <div class="row-fields">
         <input type="text" class="w-title" placeholder="Title" value="${esc(w.title||'')}">
@@ -2818,17 +3587,17 @@ function renderDashWallpaperList(){
     </div>`).join('');
   el.querySelectorAll('.dash-list-row').forEach(row => {
     const id = row.dataset.id;
-    row.querySelector('.w-title').addEventListener('change', (e)=> WALLPAPERS.doc(id).update({title: e.target.value.trim()}).then(()=>{loadWallpapers().then(renderPublicSite); showToast('Saved','success');}));
-    row.querySelector('.w-desc').addEventListener('change', (e)=> WALLPAPERS.doc(id).update({description: e.target.value.trim()}).then(()=>{loadWallpapers().then(renderPublicSite); showToast('Saved','success');}));
+    row.querySelector('.w-title').addEventListener('change', (e)=> updateDocSafely(WALLPAPERS.doc(id), {title: e.target.value.trim()}, NET_WRITE_TIMEOUT_MS, 'wallpaper-title').then(()=>{loadAllWallpapersForAdmin().then(renderPublicSite); showToast('Saved','success');}).catch(err=> showToast(isTimeoutError(err) ? 'Taking too long — check your connection and try again' : 'Could not save title', 'error')));
+    row.querySelector('.w-desc').addEventListener('change', (e)=> updateDocSafely(WALLPAPERS.doc(id), {description: e.target.value.trim()}, NET_WRITE_TIMEOUT_MS, 'wallpaper-description').then(()=>{loadAllWallpapersForAdmin().then(renderPublicSite); showToast('Saved','success');}).catch(err=> showToast(isTimeoutError(err) ? 'Taking too long — check your connection and try again' : 'Could not save description', 'error')));
     row.querySelector('[data-act=delete]').addEventListener('click', async (e)=>{
       if(!confirm('Delete this wallpaper?')) return;
       const btn = e.target;
       btn.disabled = true; btn.textContent = 'Deleting…';
       try{
         const wp = wallpapersCache.find(w => w.id === id);
-        await withTimeout(WALLPAPERS.doc(id).delete(), 15000, 'wallpaper-delete');
+        await deleteDocSafely(WALLPAPERS.doc(id), NET_WRITE_TIMEOUT_MS, 'wallpaper-delete');
         if(wp) deleteStorageFileIfApplicable(wp.image);
-        await loadWallpapers(); renderDashWallpaperList(); renderPublicSite();
+        await loadAllWallpapersForAdmin(); renderDashWallpaperList(); renderPublicSite();
         showToast('Wallpaper deleted', 'success');
       }catch(err){
         btn.disabled = false; btn.textContent = 'Delete';
@@ -2855,10 +3624,8 @@ async function moveWallpaper(id, dir){
   wallpapersReorderBusy = true;
   setListBusy('dashWallpaperList', true);
   try{
-    await withTimeout(Promise.all([
-      WALLPAPERS.doc(a.id).update({ sortOrder: bOrder }),
-      WALLPAPERS.doc(b.id).update({ sortOrder: aOrder })
-    ]), 15000, 'wallpaper-reorder');
+    // Atomic swap — see reorderPair's comment (same reasoning as movePhoto).
+    await reorderPair(WALLPAPERS, a, b, aOrder, bOrder, 15000, 'wallpaper-reorder');
     // Same reasoning as movePhoto above: wallpaper documents also carry
     // base64 image+thumb data, so re-fetching the whole collection here was
     // just as costly as it was for the Gallery — update in-memory instead.
