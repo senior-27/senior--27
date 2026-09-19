@@ -1264,8 +1264,11 @@ function initMomentsReveal(){
 /* Milestone-based photo count: never hardcoded, always derived from photosCache.length */
 function computeMilestoneLabel(count){
   if(count <= 0) return '0';
-  if(count < 50) return String(count);
-  return (Math.floor(count / 50) * 50) + '+';
+  if(count < 90) return String(count);
+  if(count <= 130) return '100+';
+  if(count <= 170) return '150+';
+  if(count <= 230) return '200+';
+  return '250+';
 }
 
 /* Compress an uploaded image file into a size-capped base64 data URL.
