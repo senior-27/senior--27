@@ -235,7 +235,6 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
 .about-stat .big-num{font-family:'Fraunces',serif; font-size:64px; font-weight:500; line-height:1;}
 .about-stat .stat-label{font-size:12px; letter-spacing:1.5px; text-transform:uppercase; color:var(--ink-soft); margin-top:8px; font-weight:600;}
 .about-stat .stat-note{border-top:1px solid var(--line); padding-top:16px; font-size:12.5px; color:var(--ink-soft); line-height:1.6; margin-top:26px;}
-.side-quote{font-family:'Fraunces',serif; font-style:italic; font-size:13.5px; color:var(--ink-soft); line-height:1.6; margin-top:20px; opacity:0.85;}
 
 @media(max-width:860px){
   .about-grid{grid-template-columns:1fr; gap:30px;}
@@ -628,7 +627,7 @@ footer{border-top:1px solid var(--line); padding:34px 0; margin-top:20px;}
       <div class="hero-thumbs" id="heroThumbs"></div>
       <div class="hero-quote">
         <span class="eyebrow">Captured to Last Forever</span>
-        <p class="serif">If only we could find our way back to being friends.</p>
+        <p class="serif">How can we go back to being friends?</p>
       </div>
     </div>
     <div class="hero-right">
@@ -652,7 +651,6 @@ footer{border-top:1px solid var(--line); padding:34px 0; margin-top:20px;}
       <div class="big-num" id="photoCountNum">0+</div>
       <div class="stat-label">Photos Uploaded</div>
       <div class="stat-note">Not a placeholder — every one of these is us.</div>
-      <div class="side-quote">Some people leave, but the memories will remain.</div>
     </div>
   </div>
 </section>
@@ -1271,8 +1269,8 @@ function initMomentsReveal(){
 /* Milestone-based photo count: never hardcoded, always derived from photosCache.length */
 function computeMilestoneLabel(count){
   if(count <= 0) return '0';
-  if(count < 50) return String(count);
-  return (Math.floor(count / 50) * 50) + '+';
+  if(count < 80) return String(count);
+  return (Math.floor((count - 80) / 50) * 50 + 100) + '+';
 }
 
 /* Compress an uploaded image file into a size-capped base64 data URL.
