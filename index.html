@@ -235,6 +235,7 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
 .about-stat .big-num{font-family:'Fraunces',serif; font-size:64px; font-weight:500; line-height:1;}
 .about-stat .stat-label{font-size:12px; letter-spacing:1.5px; text-transform:uppercase; color:var(--ink-soft); margin-top:8px; font-weight:600;}
 .about-stat .stat-note{border-top:1px solid var(--line); padding-top:16px; font-size:12.5px; color:var(--ink-soft); line-height:1.6; margin-top:26px;}
+.side-quote{font-family:'Fraunces',serif; font-style:italic; font-size:13.5px; color:var(--ink-soft); line-height:1.6; margin-top:20px; opacity:0.85;}
 
 @media(max-width:860px){
   .about-grid{grid-template-columns:1fr; gap:30px;}
@@ -444,9 +445,11 @@ footer{border-top:1px solid var(--line); padding:34px 0; margin-top:20px;}
 .footer-instagram .ig-badge svg .ig-dot{fill:currentColor; stroke:none;}
 .footer-instagram .ig-handle{font-size:12px; letter-spacing:0.4px; white-space:nowrap;}
 .site-credit{
-  text-align:center; font-size:11px; letter-spacing:0.5px; color:var(--ink-soft);
+  display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;
+  font-size:11px; letter-spacing:0.5px; color:var(--ink-soft);
   opacity:0.6; margin-top:22px; padding-top:18px; border-top:1px solid var(--line);
 }
+.site-credit .end-note{font-style:italic;}
 
 /* ---------- Lightbox ---------- */
 .lightbox{
@@ -625,7 +628,7 @@ footer{border-top:1px solid var(--line); padding:34px 0; margin-top:20px;}
       <div class="hero-thumbs" id="heroThumbs"></div>
       <div class="hero-quote">
         <span class="eyebrow">Captured to Last Forever</span>
-        <p class="serif">Senior year is not just a phase, it's our story.</p>
+        <p class="serif">If only we could find our way back to being friends.</p>
       </div>
     </div>
     <div class="hero-right">
@@ -649,6 +652,7 @@ footer{border-top:1px solid var(--line); padding:34px 0; margin-top:20px;}
       <div class="big-num" id="photoCountNum">0+</div>
       <div class="stat-label">Photos Uploaded</div>
       <div class="stat-note">Not a placeholder — every one of these is us.</div>
+      <div class="side-quote">Some people leave, but the memories will remain.</div>
     </div>
   </div>
 </section>
@@ -735,7 +739,10 @@ footer{border-top:1px solid var(--line); padding:34px 0; margin-top:20px;}
       <span class="ig-handle">@tilsseniorss27</span>
     </a>
   </div>
-  <div class="wrap site-credit">Made by Mahmoud Ahmed</div>
+  <div class="wrap site-credit">
+    <span class="end-note">Not every ending has to be forever.</span>
+    <span>Made by Mahmoud Ahmed</span>
+  </div>
 </footer>
 
 <!-- Lightbox -->
@@ -1264,11 +1271,8 @@ function initMomentsReveal(){
 /* Milestone-based photo count: never hardcoded, always derived from photosCache.length */
 function computeMilestoneLabel(count){
   if(count <= 0) return '0';
-  if(count < 90) return String(count);
-  if(count <= 130) return '100+';
-  if(count <= 170) return '150+';
-  if(count <= 230) return '200+';
-  return '250+';
+  if(count < 50) return String(count);
+  return (Math.floor(count / 50) * 50) + '+';
 }
 
 /* Compress an uploaded image file into a size-capped base64 data URL.
