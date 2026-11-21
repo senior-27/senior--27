@@ -4,18 +4,20 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Senior 27 — The Official Gallery</title>
-<meta name="description" content="Senior 27 — the official gallery of our senior year. Browse photos, featured moments, and downloadable wallpapers from our class.">
+<meta name="description" content="Senior 27 — the official gallery of our senior year. Browse photos and featured moments from our class.">
 <meta name="theme-color" content="#f6f2ea">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%231b1a17'/%3E%3Ctext x='50' y='68' font-size='58' font-family='Georgia,serif' fill='%23f6f2ea' text-anchor='middle'%3E27%3C/text%3E%3C/svg%3E">
 <meta property="og:type" content="website">
 <meta property="og:title" content="Senior 27 — The Official Gallery">
-<meta property="og:description" content="Browse photos, featured moments, and downloadable wallpapers from our senior year.">
+<meta property="og:description" content="Browse photos and featured moments from our senior year.">
 <meta name="twitter:card" content="summary_large_image">
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://www.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://firestore.googleapis.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,500;0,9..144,600;1,9..144,400&family=Inter:wght@400;500;600;700&display=swap">
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,500;0,9..144,600;1,9..144,400&family=Inter:wght@400;500;600;700&display=swap');
 
 :root{
   --cream: #f6f2ea;
@@ -164,7 +166,7 @@ button:disabled, .btn-small:disabled, .btn-primary:disabled, .btn-outline:disabl
    links, inputs) — previously undefined, so keyboard users had no way to see
    where focus was. */
 a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visible,
-.dash-tab:focus-visible, .g-item:focus-visible, .wp-card:focus-visible{
+.dash-tab:focus-visible, .g-item:focus-visible {
   outline:2px solid var(--accent); outline-offset:2px;
 }
 
@@ -246,7 +248,14 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
 
 /* ---------- Gallery ---------- */
 .gallery-section{padding:90px 0; border-top:1px solid var(--line);}
-.gallery-head{display:grid; grid-template-columns:80px 1fr; gap:20px; margin-bottom:44px;}
+.gallery-head{display:grid; grid-template-columns:auto minmax(0,1fr) auto; gap:0 22px; margin-bottom:44px; align-items:start;}
+.gallery-promo{justify-self:end; max-width:320px; border-left:1px solid var(--accent); padding:2px 0 2px 24px; margin-top:4px;}
+.gallery-promo .eyebrow{color:var(--accent); display:block; margin-bottom:12px;}
+.gallery-promo-text{font-family:'Fraunces',serif; font-style:italic; font-weight:400; font-size:21px; line-height:1.35; color:var(--ink); margin:0 0 20px;}
+@media(max-width:860px){
+  .gallery-head{grid-template-columns:auto minmax(0,1fr); gap:0 18px;}
+  .gallery-promo{grid-column:1 / -1; justify-self:start; margin-top:26px;}
+}
 .gallery-vertical-label{
   writing-mode:vertical-rl; transform:rotate(180deg); font-family:'Fraunces',serif;
   font-size:34px; font-weight:500; letter-spacing:2px;
@@ -356,27 +365,7 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
   .moment-item{grid-template-columns:1fr; gap:20px; padding:40px 0;}
 }
 
-/* ---------- Wallpaper ---------- */
-.wallpaper-section{padding:90px 0; border-top:1px solid var(--line);}
-.wallpaper-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:18px;}
-.wp-card{
-  background:var(--card); overflow:hidden; cursor:pointer;
-  border:1px solid var(--line);
-  transition:transform .3s cubic-bezier(.2,.7,.3,1), box-shadow .3s ease, border-color .3s ease;
-}
-.wp-card:hover{
-  transform:translateY(-4px);
-  box-shadow:0 14px 30px rgba(27,26,23,0.14);
-  border-color:var(--ink);
-}
-.wp-card .wp-img-wrap{aspect-ratio:3/4; overflow:hidden;}
-.wp-card img{width:100%; height:100%; object-fit:cover; transition:transform .5s ease;}
-.wp-card:hover img{transform:scale(1.05);}
-.wp-card .wp-meta{padding:14px 16px;}
-.wp-card .wp-meta .wp-title{font-weight:600; font-size:14px;}
-.wp-card .wp-meta .wp-desc{color:var(--ink-soft); font-size:12.5px; margin-top:4px;}
 @media(max-width:760px){
-  .wallpaper-grid{grid-template-columns:repeat(2,1fr);}
   .dash-list-row{flex-wrap:wrap; align-items:flex-start;}
   .dash-list-row .row-fields{min-width:0;}
   .dash-list-row > button{flex:0 0 auto;}
@@ -403,14 +392,18 @@ body.site-loading .hero-desc,
 body.site-loading #aboutStory,
 body.site-loading .hero-photo-main,
 body.site-loading .masonry,
-body.site-loading #momentsList,
-body.site-loading .wallpaper-grid{ visibility:hidden; }
+body.site-loading #momentsList{ visibility:hidden; }
 .load-veil{
   position:fixed; inset:0; background:var(--cream); z-index:50;
   display:flex; align-items:center; justify-content:center;
   transition:opacity .35s ease; color:var(--ink-soft); font-size:12.5px; letter-spacing:1.5px; text-transform:uppercase;
 }
 .load-veil.hidden{opacity:0; pointer-events:none;}
+.load-veil-inner{display:flex; flex-direction:column; align-items:center; gap:16px;}
+.load-veil-bar{display:block; width:120px; height:1px; background:var(--line); position:relative; overflow:hidden;}
+.load-veil-bar::after{content:''; position:absolute; inset:0; width:40%; background:var(--accent); animation:veilbar 1.2s ease-in-out infinite;}
+@keyframes veilbar{0%{transform:translateX(-100%);}100%{transform:translateX(260%);}}
+@media (prefers-reduced-motion:reduce){.load-veil-bar::after{animation:none; width:100%; opacity:.4;}}
 .load-fail-banner{
   position:fixed; top:0; left:0; right:0; z-index:900; background:var(--ink); color:var(--cream);
   text-align:center; font-size:13px; padding:12px 16px; display:none;
@@ -465,17 +458,6 @@ footer{border-top:1px solid var(--line); padding:34px 0; margin-top:20px;}
 .lightbox .lb-prev{left:16px;} .lightbox .lb-next{right:16px;}
 .lightbox.single-mode .lb-nav{display:none;}
 .lightbox .lb-close, .lightbox .lb-nav{ cursor:pointer; }
-
-.wp-img-wrap{position:relative;}
-.wp-download-btn{
-  position:absolute; right:10px; bottom:10px; z-index:2;
-  display:inline-flex; align-items:center; gap:6px;
-  background:rgba(27,26,23,0.82); color:#f6f2ea; border:none; cursor:pointer;
-  font-size:11px; letter-spacing:1px; text-transform:uppercase; font-weight:600;
-  padding:8px 12px; border-radius:20px; transition:background .2s ease;
-}
-.wp-download-btn:hover{background:var(--accent);}
-.wp-download-btn:disabled{opacity:0.7; cursor:wait;}
 
 /* ---------- Toast ---------- */
 #toastContainer{position:fixed; bottom:24px; left:50%; transform:translateX(-50%); z-index:800; display:flex; flex-direction:column; gap:8px;}
@@ -544,6 +526,9 @@ footer{border-top:1px solid var(--line); padding:34px 0; margin-top:20px;}
 .dash-panel{display:none;}
 .dash-panel.active{display:block;}
 .dash-card{background:var(--card); padding:22px; margin-bottom:16px;}
+.dash-count{display:flex; align-items:baseline; gap:10px; margin:0 0 16px;}
+.dash-count b{font-family:'Fraunces',serif; font-size:36px; font-weight:500; line-height:1;}
+.dash-count span{font-size:11.5px; letter-spacing:1.6px; text-transform:uppercase; font-weight:600; color:var(--ink-soft);}
 .dash-grid-photos{display:grid; grid-template-columns:repeat(auto-fill,minmax(140px,1fr)); gap:14px;}
 .dash-photo-tile{position:relative; background:#fff; overflow:hidden;}
 .dash-photo-tile img{width:100%; aspect-ratio:1; object-fit:cover;}
@@ -580,11 +565,54 @@ footer{border-top:1px solid var(--line); padding:34px 0; margin-top:20px;}
   .dash-list-row .row-fields{flex:1 1 calc(100% - 76px); min-width:0;}
   .dash-list-row > button{flex:1 1 28%;}
 }
+
+/* ---------- Albums (additive; opened only from the top nav) ---------- */
+.album-view [hidden]{display:none !important;}
+.album-view{position:fixed; inset:0; z-index:400; background:var(--cream); overflow-y:auto; overscroll-behavior:contain; display:none;}
+.album-view.active{display:block;}
+.album-view-head{display:flex; align-items:flex-end; justify-content:space-between; gap:16px; padding:30px 0 34px; flex-wrap:wrap;}
+.album-view-title{font-family:'Fraunces',serif; font-weight:500; font-size:clamp(34px,5vw,60px); margin:6px 0 0; line-height:1;}
+.album-grid{columns:3 260px; column-gap:18px; padding-bottom:60px;}
+.album-card{position:relative; border:none; padding:0; background:var(--cream-deep); text-align:left; color:#fff; display:block; width:100%; break-inside:avoid; margin:0 0 14px; cursor:pointer; overflow:hidden;}
+.album-cover{position:relative; width:100%; background:var(--cream-deep); overflow:hidden;}
+.album-cover img{display:block; width:100%; height:auto; opacity:0; transition:opacity .45s ease, transform .5s cubic-bezier(.2,.7,.3,1);}
+.album-cover img.loaded{opacity:1;}
+.album-card:hover .album-cover img{transform:scale(1.03);}
+.album-caption{position:absolute; left:0; right:0; bottom:0; padding:70px 18px 18px; background:linear-gradient(transparent,rgba(0,0,0,.68));}
+.album-card.no-cover{color:var(--ink);}
+.album-card.no-cover .album-caption{position:static; background:none; padding:14px 18px 18px;}
+.album-card .album-title{font-family:'Fraunces',serif; font-size:24px; font-weight:500; line-height:1.15; color:inherit;}
+.album-card .album-cta{font-size:11px; letter-spacing:1.5px; text-transform:uppercase; font-weight:600; opacity:.85; margin-top:8px;}
+.album-more-wrap{text-align:center; padding:10px 0 60px; min-height:70px;}
+.album-card, .album-view button{-webkit-tap-highlight-color:transparent;}
+@media(max-width:560px){
+  .album-view-head{padding:22px 0 22px;}
+  .album-view-meta{margin-top:14px;}
+  .album-date-text{font-size:18px;}
+  .album-grid{padding-bottom:40px;}
+}
+.album-manage{background:var(--card); padding:14px; margin:-6px 0 16px;}
+.album-manage .picker-grid{margin:10px 0;}
+
+/* ---------- Header: sticky, hides on scroll down, returns on scroll up ---------- */
+header.site-header{position:sticky; top:0; z-index:40; background:var(--cream);
+  box-shadow:0 0 0 100vmax var(--cream); clip-path:inset(0 -100vmax -1px -100vmax);
+  transition:transform .32s cubic-bezier(.4,0,.2,1);}
+header.site-header.scrolled{box-shadow:0 0 0 100vmax var(--cream), 0 1px 0 100vmax var(--line);}
+header.site-header.hide{transform:translateY(calc(-100% - 3px));}
+/* ---------- Album date / meta ---------- */
+.album-view-meta{display:flex; align-items:center; gap:14px; margin-top:20px; flex-wrap:wrap;}
+.album-view-meta .rule{width:44px; height:1px; background:var(--accent);}
+.album-date-text{font-family:'Fraunces',serif; font-style:italic; font-size:20px; color:var(--accent); letter-spacing:.2px;}
+.album-count{font-size:11.5px; letter-spacing:2px; text-transform:uppercase; font-weight:600; color:var(--ink-soft);}
+.album-date-text:not(:empty) + .album-count::before{content:'·'; margin-right:14px; color:var(--ink-soft);}
+.album-card .album-date{font-size:11px; letter-spacing:1.8px; text-transform:uppercase; font-weight:600; opacity:.92; margin-bottom:8px;}
+.album-card .album-date::before{content:''; display:inline-block; width:18px; height:1px; background:currentColor; vertical-align:middle; margin-right:8px; opacity:.8;}
 </style>
 </head>
 <body class="site-loading">
 
-<div class="load-veil" id="loadVeil">Loading gallery…</div>
+<div class="load-veil" id="loadVeil"><div class="load-veil-inner"><span id="loadVeilText">Loading gallery…</span><i class="load-veil-bar" aria-hidden="true"></i></div></div>
 <div class="load-fail-banner" id="loadFailBanner">
   We couldn't load the latest content. <button id="loadFailRetry" type="button">Retry</button>
 </div>
@@ -604,8 +632,8 @@ footer{border-top:1px solid var(--line); padding:34px 0; margin-top:20px;}
   <nav class="main-nav" id="mainNav">
     <a href="#home">Home</a>
     <a href="#gallery">Gallery</a>
+    <a href="#albums" id="navAlbums">Albums</a>
     <a href="#moments">Moments</a>
-    <a href="#wallpaper">Wallpaper</a>
     <a href="#about">About</a>
   </nav>
   <div class="header-actions">
@@ -663,6 +691,11 @@ footer{border-top:1px solid var(--line); padding:34px 0; margin-top:20px;}
         <h3>Explore the Moments</h3>
         <p>Browse through all the amazing moments shared by our class.</p>
       </div>
+      <div class="gallery-promo">
+        <span class="eyebrow">Looking for a specific occasion?</span>
+        <p class="gallery-promo-text">Every occasion and every memory, in its own album.</p>
+        <button class="btn-outline" id="galleryAlbumsBtn" type="button">Browse Albums <span aria-hidden="true">&rarr;</span></button>
+      </div>
     </div>
     <div class="masonry" id="galleryMasonry"></div>
     <div id="galleryEmpty" class="empty-state" hidden>
@@ -696,30 +729,6 @@ footer{border-top:1px solid var(--line); padding:34px 0; margin-top:20px;}
   </div>
 </section>
 
-<section class="wallpaper-section" id="wallpaper">
-  <div class="wrap">
-    <div class="section-head-row">
-      <div>
-        <span class="eyebrow">Downloads</span>
-        <h2 class="serif">Wallpaper</h2>
-      </div>
-    </div>
-    <div class="wallpaper-grid" id="wallpaperGrid"></div>
-    <div id="wallpaperLoading" class="section-spinner-wrap" hidden>
-      <div class="section-spinner" role="status" aria-label="Loading wallpapers"></div>
-      <span class="section-spinner-label">Loading…</span>
-    </div>
-    <div id="wallpaperEmpty" class="empty-state" hidden>
-      <span class="eyebrow">No wallpapers yet</span>
-      <p>Wallpapers added by the Owner will appear here.</p>
-    </div>
-    <div class="gallery-sentinel" id="wallpaperLoadSentinel" aria-hidden="true"></div>
-    <div class="gallery-spinner-wrap" id="wallpaperSpinnerWrap" hidden>
-      <div class="gallery-spinner" role="status" aria-label="Loading more wallpapers"></div>
-    </div>
-  </div>
-</section>
-
 <footer>
   <div class="wrap footer-row">
     <div>
@@ -741,6 +750,28 @@ footer{border-top:1px solid var(--line); padding:34px 0; margin-top:20px;}
     <span>© 2026 Mahmoud Ahmed — Made with love &amp; memories</span>
   </div>
 </footer>
+
+<div class="album-view" id="albumView" role="dialog" aria-modal="true" aria-label="Albums">
+  <div class="wrap">
+    <div class="album-view-head">
+      <div><span class="eyebrow" id="albumEyebrow">By Occasion</span><h2 class="album-view-title" id="albumViewTitle">Albums</h2>
+        <div class="album-view-meta" id="albumViewMeta" hidden><span class="rule"></span><span class="album-date-text" id="albumDateText"></span><span class="album-count" id="albumCountText"></span></div></div>
+      <button class="btn-outline" id="albumBackBtn">&#10005; Close</button>
+    </div>
+    <div id="albumListPane">
+      <div class="album-grid" id="albumGrid"></div>
+      <div id="albumListMsg" class="empty-state"><span class="eyebrow" id="albumListMsgText">Loading…</span><button class="btn-outline" id="albumListRetry" hidden style="margin-top:14px;">Try again</button></div>
+    </div>
+    <div id="albumPhotosPane" hidden>
+      <div class="masonry" id="albumMasonry"></div>
+      <div id="albumEmpty" class="empty-state" hidden><span class="eyebrow">No photos yet</span><p>Photos for this occasion will appear here.</p></div>
+      <div class="album-more-wrap">
+        <div class="gallery-spinner-wrap" id="albumSpinnerWrap" hidden><div class="gallery-spinner" role="status" aria-label="Loading photos"></div></div>
+        <button class="btn-outline" id="albumRetryBtn" hidden>Try again</button>
+      </div>
+    </div>
+  </div>
+</div>
 
 <!-- Lightbox -->
 <div class="lightbox" id="lightbox" role="dialog" aria-modal="true" aria-label="Image preview">
@@ -786,8 +817,8 @@ footer{border-top:1px solid var(--line); padding:34px 0; margin-top:20px;}
     <div class="dash-tabs" role="tablist" aria-label="Dashboard sections">
       <div class="dash-tab active" data-tab="home" role="tab" tabindex="0" aria-selected="true">Homepage</div>
       <div class="dash-tab" data-tab="gallery" role="tab" tabindex="0" aria-selected="false">Gallery</div>
+      <div class="dash-tab" data-tab="albums" role="tab" tabindex="0" aria-selected="false">Albums</div>
       <div class="dash-tab" data-tab="moments" role="tab" tabindex="0" aria-selected="false">Moments</div>
-      <div class="dash-tab" data-tab="wallpaper" role="tab" tabindex="0" aria-selected="false">Wallpaper</div>
       <div class="dash-tab" data-tab="about" role="tab" tabindex="0" aria-selected="false">About</div>
       <div class="dash-tab" data-tab="settings" role="tab" tabindex="0" aria-selected="false">Settings</div>
     </div>
@@ -838,9 +869,24 @@ footer{border-top:1px solid var(--line); padding:34px 0; margin-top:20px;}
 
     <!-- Gallery tab -->
     <div class="dash-panel" id="panel-gallery">
+      <div class="dash-count" id="dashGalleryCount" aria-live="polite"></div>
       <div class="upload-drop" id="galleryUploadDrop">Click to upload photos to the Gallery</div>
       <input type="file" id="galleryFileInput" accept="image/*" multiple hidden>
       <div class="dash-grid-photos" id="dashGalleryGrid"></div>
+    </div>
+
+    <!-- Albums tab -->
+    <div class="dash-panel" id="panel-albums">
+      <div class="dash-card">
+        <label style="display:block; font-size:11.5px; text-transform:uppercase; letter-spacing:1px; font-weight:600; margin-bottom:10px;">New album</label>
+        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+          <input type="text" id="newAlbumTitle" placeholder="e.g. Fayoum Trip" style="flex:1; min-width:180px; padding:10px 12px; border:1px solid var(--line); background:transparent; font-family:inherit;">
+          <button class="btn-small dark" id="addAlbumBtn">Create album</button>
+        </div>
+        <p style="font-size:12.5px; color:var(--ink-soft); margin:12px 0 0;">Albums only appear when a visitor taps "Albums" in the top bar. Use Manage to add photos, reorder them, and pick the cover. Photos stay in the main Gallery too.</p>
+      </div>
+      <div class="dash-count" id="dashAlbumsCount" aria-live="polite"></div>
+      <div id="dashAlbumsList"></div>
     </div>
 
     <!-- Moments tab -->
@@ -850,13 +896,6 @@ footer{border-top:1px solid var(--line); padding:34px 0; margin-top:20px;}
         <div class="picker-grid" id="momentAddPicker"></div>
       </div>
       <div id="dashMomentsList"></div>
-    </div>
-
-    <!-- Wallpaper tab -->
-    <div class="dash-panel" id="panel-wallpaper">
-      <div class="upload-drop" id="wallpaperUploadDrop">Click to upload a wallpaper</div>
-      <input type="file" id="wallpaperFileInput" accept="image/*" hidden>
-      <div id="dashWallpaperList"></div>
     </div>
 
     <!-- About tab -->
@@ -950,10 +989,11 @@ const OWNER_UID = 'GNHk3y24WGfgFil3W0G4CBhpDN63';
 
 const PHOTOS = db.collection('photos');
 const MOMENTS = db.collection('moments');
-const WALLPAPERS = db.collection('wallpapers');
 const SETTINGS = db.collection('settings');
 
 let unlocked = false;
+let albumPhotos = [];
+let albumOverlayOpen = false;
 let photosCache = [];   // [{id, caption, image, width, height, isFeatured, showOnHome, sortOrder}]
 let momentsCache = [];  // [{id, photoId, title, caption, sortOrder}]
 // Distinguishes "hasn't finished loading yet" from "the Owner genuinely
@@ -962,23 +1002,6 @@ let momentsCache = [];  // [{id, photoId, title, caption, sortOrder}]
 // briefly see "No moments yet" for a class that has plenty, purely because
 // the fetch hadn't landed. See loadMoments() / renderPublicSite().
 let momentsLoaded = false;
-let wallpapersCache = [];
-/* Wallpaper pagination state — mirrors the Gallery's exactly (see below),
-   for the same reason: fetching every wallpaper in one request used to be
-   the actual bug behind "this section takes forever to load" — each
-   wallpaper stores a full image, same as a Gallery photo, and downloading
-   the whole collection in a single request doesn't get faster just because
-   there's no masonry to reflow. wallpapersLoaded means "the first page has
-   landed" (used to tell a genuinely empty collection apart from one that
-   just hasn't loaded yet — see renderWallpaperGrid). wallpapersFullyLoaded
-   means "the Owner's Dashboard has the complete set" (needed there, and
-   only there, for safe reordering).*/
-let wallpapersLastDoc = null;
-let wallpapersHasMore = false;
-let wallpapersLoadingMore = false;
-let wallpapersFullyLoaded = false;
-const WALLPAPER_INITIAL_PAGE_SIZE = 6;
-const WALLPAPER_PAGE_SIZE = 9;
 let homeSettings = {};
 let aboutSettings = {};
 let siteSettings = {};
@@ -1036,6 +1059,11 @@ let selectedAboutImageId = null;
 
 /* ============ Utilities ============ */
 function $(id){ return document.getElementById(id); }
+function safeSrc(v){
+  // Image URLs coming from the database may only be inline images or https links.
+  v = String(v || '');
+  return /^(data:image\/(png|jpe?g|webp|gif|avif);base64,|https:\/\/)/i.test(v) ? esc(v) : '';
+}
 function esc(str){ return (str||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 
 /* ============ Network resilience ============
@@ -1225,7 +1253,19 @@ function heroFallbackMarkup(){
   return `<div class="empty-state" style="border:none; height:100%;"></div>`;
 }
 /* Generic broken-image handler: hide the element instead of showing the browser's broken-image icon */
-function brokenImgAttr(){ return `onerror="this.style.display='none'; this.dataset.broken='1';"`; }
+function imgFail(img){
+  // A single dropped/failed image load used to hide the photo for good. Try
+  // again twice (with a short pause) before giving up on it.
+  const n = +(img.dataset.retry || 0);
+  const src = img.getAttribute('src');
+  if(n < 2 && src){
+    img.dataset.retry = n + 1;
+    setTimeout(()=>{ img.removeAttribute('src'); img.setAttribute('src', src); }, 700 * (n + 1));
+    return;
+  }
+  img.style.display = 'none'; img.dataset.broken = '1';
+}
+function brokenImgAttr(){ return `onerror="imgFail(this)"`; }
 
 /* Triggers the one-time editorial reveal (CSS above) as each Moment scrolls
    into view. `.mv-pending` is only ever added here, right before observing —
@@ -1447,8 +1487,11 @@ function sortByOrderThenCreated(list){
    the site exactly as fast as any visitor, on the same 5 photos. The
    complete set the Dashboard needs is fetched when the Dashboard is actually
    opened (see openOwnerDashboard), which is the only place it's needed. */
-async function loadPhotos(){
-  const pageSnap = await readWithRetry(() => PHOTOS.orderBy('sortOrder', 'asc').limit(INITIAL_GALLERY_PAGE_SIZE).get(), 'gallery-initial');
+function fetchFirstGalleryPage(){ return readWithRetry(() => PHOTOS.orderBy('sortOrder', 'asc').limit(INITIAL_GALLERY_PAGE_SIZE).get(), 'gallery-initial'); }
+async function loadPhotos(prefetched){
+  let pageSnap;
+  try{ pageSnap = await (prefetched || fetchFirstGalleryPage()); }
+  catch(e){ if(!prefetched) throw e; pageSnap = await fetchFirstGalleryPage(); }
   const byId = {};
   pageSnap.docs.forEach(d => byId[d.id] = { id: d.id, ...d.data() });
 
@@ -1807,69 +1850,6 @@ async function loadMoments(){
   momentsCache = sortByOrderThenCreated(snap.docs.map(d => ({ id:d.id, ...d.data() })));
   momentsLoaded = true;
 }
-/* Admin only — the Dashboard needs every wallpaper at once, the same reason
-   loadAllPhotosForAdmin exists: reordering swaps sortOrder between
-   neighbours, so acting on a partial list could put wallpapers in the wrong
-   order. Called once, when the Owner opens the Dashboard (openOwnerDashboard)
-   or right after an upload/edit/delete there. */
-async function loadAllWallpapersForAdmin(){
-  const snap = await readWithRetry(() => WALLPAPERS.get(), 'admin-wallpapers', 1, NET_ADMIN_READ_TIMEOUT_MS);
-  wallpapersCache = sortByOrderThenCreated(snap.docs.map(d => ({ id:d.id, ...d.data() })));
-  wallpapersHasMore = false;
-  wallpapersFullyLoaded = true;
-  wallpapersLoaded = true;   // the public section, if visible behind the Dashboard, is also fully covered now
-}
-
-/* Public — fetches only the first small page, exactly like loadPhotos() does
-   for the Gallery. The rest streams in as the visitor scrolls near the
-   bottom of the section (see initWallpaperInfiniteScroll). This is what
-   actually fixes "the Wallpaper section takes forever to load": before,
-   opening this section meant downloading every wallpaper — each one a full
-   image, same as a Gallery photo — in a single request, whatever the total
-   count. Paging it the same way the Gallery already is removes that
-   regardless of how many wallpapers a class ends up adding over the years. */
-async function loadWallpapersFirstPage(){
-  const snap = await readWithRetry(() => WALLPAPERS.orderBy('sortOrder', 'asc').limit(WALLPAPER_INITIAL_PAGE_SIZE).get(), 'wallpapers-initial');
-  wallpapersCache = sortByOrderThenCreated(snap.docs.map(d => ({ id:d.id, ...d.data() })));
-  wallpapersLastDoc = snap.docs.length ? snap.docs[snap.docs.length - 1] : null;
-  wallpapersHasMore = snap.docs.length === WALLPAPER_INITIAL_PAGE_SIZE;
-  wallpapersLoaded = true;
-}
-
-/* "Load more" for the Wallpaper grid — the exact same shape as
-   loadMoreGalleryPhotos, including staying silent on failure (see that
-   function's comment; triggerWallpaperLoadMore is what decides to retry). */
-async function loadMoreWallpapers(pageSize){
-  const size = pageSize || WALLPAPER_PAGE_SIZE;
-  if(wallpapersFullyLoaded || !wallpapersHasMore || wallpapersLoadingMore || !wallpapersLastDoc) return false;
-  wallpapersLoadingMore = true;
-  updateWallpaperLoadingIndicator();
-  let ok = false;
-  try{
-    const snap = await readWithRetry(() => WALLPAPERS.orderBy('sortOrder', 'asc').startAfter(wallpapersLastDoc).limit(size).get(), 'wallpapers-page', 2);
-    if(wallpapersFullyLoaded) return false;  // Dashboard loaded the complete set while this page was in flight
-    const existingIds = new Set(wallpapersCache.map(w => w.id));
-    const added = [];
-    snap.docs.forEach(d => { if(!existingIds.has(d.id)) added.push({ id: d.id, ...d.data() }); });
-    if(added.length) wallpapersCache = sortByOrderThenCreated(wallpapersCache.concat(added));
-    wallpapersLastDoc = snap.docs.length ? snap.docs[snap.docs.length - 1] : wallpapersLastDoc;
-    wallpapersHasMore = snap.docs.length === size;
-    onWallpapersArrived(added);
-    ok = true;
-  }catch(e){
-    // Silent — triggerWallpaperLoadMore schedules a quiet retry.
-  }finally{
-    wallpapersLoadingMore = false;
-    updateWallpaperLoadingIndicator();
-  }
-  return ok;
-}
-/* A wallpaper (or a few) just landed: add it to the grid without touching
-   anything already shown. */
-function onWallpapersArrived(added){
-  syncWallpaperGrid();
-  updateWallpaperLoadingIndicator();
-}
 
 async function loadSettings(){
   const [homeDoc, aboutDoc, siteDoc] = await Promise.all([
@@ -1885,135 +1865,7 @@ async function loadSettings(){
 /* Settings and Moments are small, image-free documents, so fetching them
    first (fast) is what lets loadPhotos() below know exactly which specific
    photos Hero/About/Moments need — instead of fetching the whole Gallery
-   collection just to answer that question. Wallpaper is unrelated to any of
-   this and loads its own first page in parallel the whole time. */
-/* Nothing on the first screen depends on Wallpapers, so fetching even the
-   first small page at the same moment as the rest of the first paint would
-   just compete for the connection with the photos the visitor is actually
-   waiting to see. It's pulled once the page is already open — once,
-   whoever asks first, with the flags below making a second call a no-op
-   rather than a second download. */
-let wallpapersLoaded = false;
-let wallpapersLoading = null;
-let wallpapersRetryDelay = GALLERY_RETRY_MIN_MS;
-let wallpapersFirstLoadRetryTimer = null;
-let wallpaperStartObserver = null;
-
-function initWallpaperLazyStart(){
-  if(wallpaperStartObserver || wallpapersLoaded) return;
-  const section = $('wallpaper');
-  if(!section) return;
-  if(typeof IntersectionObserver === 'undefined'){
-    setTimeout(()=> ensureWallpapersLoaded(), 1200);
-    return;
-  }
-  try{
-    wallpaperStartObserver = new IntersectionObserver(entries=>{
-      if(entries.some(entry => entry.isIntersecting)){
-        if(wallpaperStartObserver){ wallpaperStartObserver.disconnect(); wallpaperStartObserver = null; }
-        ensureWallpapersLoaded();
-      }
-    }, { rootMargin:'900px 0px' });
-    wallpaperStartObserver.observe(section);
-  }catch(_){
-    setTimeout(()=> ensureWallpapersLoaded(), 1200);
-  }
-}
-
-function scheduleWallpaperFirstLoadRetry(){
-  if(wallpapersFirstLoadRetryTimer) return;
-  const delay = wallpapersRetryDelay;
-  wallpapersRetryDelay = Math.min(wallpapersRetryDelay * 2, GALLERY_RETRY_MAX_MS);
-  wallpapersFirstLoadRetryTimer = setTimeout(()=>{
-    wallpapersFirstLoadRetryTimer = null;
-    ensureWallpapersLoaded();
-  }, delay);
-}
-
-function ensureWallpapersLoaded(){
-  if(wallpapersLoaded) return Promise.resolve();
-  if(wallpapersLoading) return wallpapersLoading;
-  if(wallpapersFirstLoadRetryTimer){
-    clearTimeout(wallpapersFirstLoadRetryTimer);
-    wallpapersFirstLoadRetryTimer = null;
-  }
-  wallpapersLoading = loadWallpapersFirstPage().then(()=>{
-    wallpapersRetryDelay = GALLERY_RETRY_MIN_MS;
-    renderWallpaperGrid();
-    initWallpaperInfiniteScroll();
-    if(wallpaperStartObserver){ wallpaperStartObserver.disconnect(); wallpaperStartObserver = null; }
-    if(unlocked && $('dashOverlay').classList.contains('open')) renderDashboard();
-  }).catch(()=>{
-    scheduleWallpaperFirstLoadRetry();
-  }).finally(()=>{
-    wallpapersLoading = null;
-  });
-  return wallpapersLoading;
-}
-window.addEventListener('online', ()=>{
-  if(wallpapersFirstLoadRetryTimer){ clearTimeout(wallpapersFirstLoadRetryTimer); wallpapersFirstLoadRetryTimer = null; }
-  if(!wallpapersLoaded) { wallpapersRetryDelay = GALLERY_RETRY_MIN_MS; ensureWallpapersLoaded(); }
-});
-
-/* Infinite scroll for the rest of the Wallpaper section — the exact same
-   pattern as the Gallery's (see initGalleryInfiniteScroll/triggerGalleryLoadMore
-   for the full reasoning): a static, invisible sentinel after the grid,
-   watched once, with the same quiet retry-with-backoff on failure and the
-   same immediate retry the moment the connection comes back. */
-let wallpaperScrollObserver = null;
-let wallpaperSentinelVisible = false;
-let wallpaperRetryTimer = null;
-function initWallpaperInfiniteScroll(){
-  if(wallpaperScrollObserver) return;
-  const sentinel = $('wallpaperLoadSentinel');
-  if(!sentinel || typeof IntersectionObserver === 'undefined'){
-    autoFillWallpapersWithoutObserver();
-    return;
-  }
-  wallpaperScrollObserver = new IntersectionObserver((entries)=>{
-    entries.forEach(entry => {
-      wallpaperSentinelVisible = entry.isIntersecting;
-      if(entry.isIntersecting) triggerWallpaperLoadMore();
-    });
-  }, { rootMargin: '600px 0px' });
-  wallpaperScrollObserver.observe(sentinel);
-}
-async function autoFillWallpapersWithoutObserver(){
-  while(!wallpapersFullyLoaded && wallpapersHasMore){
-    const ok = await loadMoreWallpapers(WALLPAPER_PAGE_SIZE);
-    if(ok){ wallpaperRetryDelay = GALLERY_RETRY_MIN_MS; continue; }
-    await sleep(wallpaperRetryDelay);
-    wallpaperRetryDelay = Math.min(wallpaperRetryDelay * 2, GALLERY_RETRY_MAX_MS);
-  }
-}
-let wallpaperRetryDelay = GALLERY_RETRY_MIN_MS;
-async function triggerWallpaperLoadMore(){
-  if(wallpapersFullyLoaded || !wallpapersHasMore || wallpapersLoadingMore) return;
-  const ok = await loadMoreWallpapers(WALLPAPER_PAGE_SIZE);
-  if(!ok){
-    scheduleWallpaperRetry();
-    return;
-  }
-  wallpaperRetryDelay = GALLERY_RETRY_MIN_MS;
-  if(wallpapersFullyLoaded || !wallpapersHasMore) return;
-  const sentinel = $('wallpaperLoadSentinel');
-  if(sentinel && sentinelNearViewport(sentinel)) return triggerWallpaperLoadMore();
-}
-function scheduleWallpaperRetry(){
-  if(wallpaperRetryTimer || wallpapersFullyLoaded || !wallpapersHasMore) return;
-  const delay = wallpaperRetryDelay;
-  wallpaperRetryDelay = Math.min(wallpaperRetryDelay * 2, GALLERY_RETRY_MAX_MS);
-  wallpaperRetryTimer = setTimeout(()=>{
-    wallpaperRetryTimer = null;
-    if(wallpaperSentinelVisible) triggerWallpaperLoadMore();
-  }, delay);
-}
-window.addEventListener('online', ()=>{
-  if(wallpapersFullyLoaded || !wallpapersHasMore) return;
-  if(wallpaperRetryTimer){ clearTimeout(wallpaperRetryTimer); wallpaperRetryTimer = null; }
-  wallpaperRetryDelay = GALLERY_RETRY_MIN_MS;
-  if(wallpaperSentinelVisible) triggerWallpaperLoadMore();
-});
+   collection just to answer that question. */
 
 let photosLoadFailed = false;
 let momentsLazyObserver = null;
@@ -2033,6 +1885,7 @@ async function loadAll(){
   if(loadAllRunning) return loadAllRunning;
   loadAllRunning = (async ()=>{
     const veil = $('loadVeil');
+    const slowTimer = setTimeout(()=>{ const t = document.getElementById('loadVeilText'); if(t) t.textContent = 'Still loading — slow connection…'; }, 6000);
     const failBanner = $('loadFailBanner');
     const retryBtn = $('loadFailRetry');
     if(retryBtn) retryBtn.disabled = true;
@@ -2042,6 +1895,8 @@ async function loadAll(){
          must never prevent the Gallery itself from opening. On a partial
          failure we keep safe defaults for the failed piece, show the retry
          banner, and let the rest of the site remain usable. */
+      const firstPagePromise = fetchFirstGalleryPage();
+      firstPagePromise.catch(()=>{});
       const [settingsResult, momentsResult] = await Promise.allSettled([
         loadSettings(),
         loadMoments()
@@ -2055,7 +1910,7 @@ async function loadAll(){
 
       photosLoadFailed = false;
       try{
-        await loadPhotos();
+        await loadPhotos(firstPagePromise);
       }catch(e){
         hadInitialError = true;
         photosLoadFailed = true;
@@ -2065,7 +1920,6 @@ async function loadAll(){
       else failBanner.classList.remove('show');
       document.body.classList.remove('site-loading');
       renderPublicSite();
-      initWallpaperLazyStart();
       initMomentsLazyLoad();
       const hh = (location.hash || '').slice(1);
       if(hh && document.getElementById(hh)) setTimeout(()=> scrollToSection(hh), 400);
@@ -2079,8 +1933,8 @@ async function loadAll(){
       failBanner.classList.add('show');
       document.body.classList.remove('site-loading');
       renderPublicSite();
-      initWallpaperLazyStart();
     }finally{
+      clearTimeout(slowTimer);
       veil.classList.add('hidden');
       if(retryBtn) retryBtn.disabled = false;
     }
@@ -2110,17 +1964,17 @@ function splitBrandMark(str){
    thrown away and rebuilt. */
 
 function heroThumbImgMarkup(p){
-  return `<img src="${p.thumb || p.image}" alt="${esc(p.caption||'')}" decoding="async" ${brokenImgAttr()}>`;
+  return `<img src="${safeSrc(p.thumb || p.image)}" alt="${esc(p.caption||'')}" decoding="async" ${brokenImgAttr()}>`;
 }
 function momentImgMarkup(m, p){
-  return `<img src="${p.image}" alt="${esc(m.title||'')}" loading="lazy" decoding="async" ${brokenImgAttr()}>`;
+  return `<img src="${safeSrc(p.image)}" alt="${esc(m.title||'')}" loading="lazy" decoding="async" ${brokenImgAttr()}>`;
 }
 function galleryItemMarkup(p){
   // data-id (not an index): indexes shift whenever a photo that sorts
   // earlier arrives later, which is exactly what a background stream does.
   // Resolving the index at click time from the id can never go stale.
-  return `<div class="g-item" data-id="${esc(p.id)}" role="button" tabindex="0" aria-label="View this photo larger"${p.width && p.height ? ` style="aspect-ratio:${p.width}/${p.height}"` : ''}>
-        <img src="${p.thumb || p.image}" alt="${esc(p.caption||'Gallery photo')}" loading="lazy" decoding="async" ${brokenImgAttr()}>
+  return `<div class="g-item" data-id="${esc(p.id)}" role="button" tabindex="0" aria-label="View this photo larger"${p.width && p.height ? ` style="aspect-ratio:${+p.width}/${+p.height}"` : ''}>
+        <img src="${safeSrc(p.thumb || p.image)}" alt="${esc(p.caption||'Gallery photo')}" loading="lazy" decoding="async" ${brokenImgAttr()}>
         ${p.caption ? `<div class="g-cap">${esc(p.caption)}</div>` : ''}
       </div>`;
 }
@@ -2253,7 +2107,7 @@ function hydratePhotoSlots(p){
   if(homeSettings.heroImageId === p.id){
     const heroMainEl = $('heroPhotoMain');
     if(heroMainEl && !heroMainEl.querySelector('img')){
-      heroMainEl.innerHTML = `<div class="hero-photo-media"><img src="${p.image}" alt="" fetchpriority="high" loading="eager" decoding="async" onerror="this.closest('.hero-photo-main').innerHTML=heroFallbackMarkup();"></div>`;
+      heroMainEl.innerHTML = `<div class="hero-photo-media"><img src="${safeSrc(p.image)}" alt="" fetchpriority="high" loading="eager" decoding="async" onerror="this.closest('.hero-photo-main').innerHTML=heroFallbackMarkup();"></div>`;
     }
       setupHeroPan();
   }
@@ -2262,7 +2116,7 @@ function hydratePhotoSlots(p){
   if(aboutSettings.imageId === p.id){
     const aboutEl = $('aboutImage');
     if(aboutEl && !aboutEl.querySelector('img')){
-      aboutEl.innerHTML = `<img src="${p.image}" alt="" ${brokenImgAttr()}>`;
+      aboutEl.innerHTML = `<img src="${safeSrc(p.image)}" alt="" ${brokenImgAttr()}>`;
     }
   }
 
@@ -2317,7 +2171,7 @@ function renderPublicSite(){
   const heroMain = photoById(homeSettings.heroImageId);
   const heroMainEl = $('heroPhotoMain');
   heroMainEl.innerHTML = heroMain
-    ? `<div class="hero-photo-media"><img src="${heroMain.image}" alt="" fetchpriority="high" loading="eager" decoding="async" onerror="this.closest('.hero-photo-main').innerHTML=heroFallbackMarkup();"></div>`
+    ? `<div class="hero-photo-media"><img src="${safeSrc(heroMain.image)}" alt="" fetchpriority="high" loading="eager" decoding="async" onerror="this.closest('.hero-photo-main').innerHTML=heroFallbackMarkup();"></div>`
     : heroFallbackMarkup();
   setupHeroPan();
 
@@ -2341,7 +2195,7 @@ function renderPublicSite(){
   aboutBtn.textContent = (aboutSettings.buttonText || 'Read Our Story') + ' →';
   aboutBtn.setAttribute('href', safeUrl(aboutSettings.buttonUrl) || '#gallery');
   const aboutImg = photoById(aboutSettings.imageId);
-  $('aboutImage').innerHTML = aboutImg ? `<img src="${aboutImg.image}" alt="" ${brokenImgAttr()}>` : '';
+  $('aboutImage').innerHTML = aboutImg ? `<img src="${safeSrc(aboutImg.image)}" alt="" ${brokenImgAttr()}>` : '';
 
   // Photo count (auto, milestone-based, never hardcoded)
   // Uses the tracked total, not just what's currently loaded in memory —
@@ -2393,108 +2247,8 @@ function renderPublicSite(){
     momEl.querySelectorAll('.moment-img[data-moment-id]').forEach(wireMomentImg);
   }
 
-  // Wallpapers
-  renderWallpaperGrid();
 }
 
-/* Its own renderer so the Wallpaper section can appear on its own, the
-   moment its (deferred) fetch lands, without re-rendering the Hero,
-   Gallery and Moments the visitor is already looking at. */
-function renderWallpaperGrid(){
-  const wpEl = $('wallpaperGrid');
-  if(!wpEl) return;
-  if(!wallpapersLoaded){
-    // Still fetching — the section is deliberately loaded lazily (see
-    // ensureWallpapersLoaded), so a visitor who scrolls here fast can easily
-    // arrive before the fetch lands. Say "Loading…", not "none added" —
-    // that line is only true once wallpapersLoaded actually confirms it.
-    wpEl.innerHTML = '';
-    $('wallpaperLoading').hidden = false;
-    $('wallpaperEmpty').hidden = true;
-  }else if(wallpapersCache.length === 0){
-    wpEl.innerHTML = '';
-    $('wallpaperLoading').hidden = true;
-    $('wallpaperEmpty').hidden = false;
-  }else{
-    $('wallpaperLoading').hidden = true;
-    $('wallpaperEmpty').hidden = true;
-    syncWallpaperGrid();
-  }
-  updateWallpaperLoadingIndicator();
-}
-
-/* Same id-keyed, insert-only approach as syncGalleryGrid: only the wallpapers
-   not already on screen get built and inserted, in the right position;
-   everything already there — its DOM node, its already-decoded image —
-   is left completely alone. This is also what makes it safe for the FIRST
-   render (wpEl starts empty, so every wallpaper is "new") as well as every
-   later page that streams in as the visitor scrolls. */
-function wallpaperCardMarkup(w){
-  return `<div class="wp-card" data-id="${esc(w.id)}" role="button" tabindex="0" aria-label="View ${esc(w.title||'this wallpaper')} larger">
-        <div class="wp-img-wrap">
-          <img src="${w.thumb || w.image}" alt="${esc(w.title||'Wallpaper')}" loading="lazy" decoding="async" ${brokenImgAttr()}>
-          <button type="button" class="wp-download-btn" aria-label="Download ${esc(w.title||'wallpaper')}" onclick="event.stopPropagation();">
-            <span aria-hidden="true">⬇</span> Download
-          </button>
-        </div>
-        ${(w.title || w.description) ? `
-        <div class="wp-meta">
-          ${w.title ? `<div class="wp-title">${esc(w.title)}</div>` : ''}
-          ${w.description ? `<div class="wp-desc">${esc(w.description)}</div>` : ''}
-        </div>` : ''}
-      </div>`;
-}
-function wireWallpaperCard(el){
-  const downloadBtn = el.querySelector('.wp-download-btn');
-  downloadBtn.addEventListener('click', ()=>{
-    const w = wallpapersCache.find(w => w.id === el.dataset.id);
-    if(w) downloadWallpaper(w, downloadBtn);
-  });
-  const open = ()=>{
-    const w = wallpapersCache.find(w => w.id === el.dataset.id);
-    if(w) openLightboxImage(w.image, w.title || '');
-  };
-  el.addEventListener('click', open);
-  el.addEventListener('keydown', (e)=>{
-    if(e.key !== 'Enter' && e.key !== ' ') return;
-    // The download button is its own real, independently focusable <button>
-    // inside this card — pressing Enter/Space while focus is actually ON IT
-    // must only trigger its native click (download), not ALSO bubble up
-    // into this card's own handler and open the lightbox at the same time.
-    if(e.target !== el) return;
-    e.preventDefault();
-    open();
-  });
-}
-function syncWallpaperGrid(){
-  const wpEl = $('wallpaperGrid');
-  if(!wpEl) return;
-  const existing = new Map();
-  wpEl.querySelectorAll('.wp-card').forEach(n => existing.set(n.dataset.id, n));
-  const wantedIds = new Set(wallpapersCache.map(w => w.id));
-  let prev = null;
-  wallpapersCache.forEach(w => {
-    let node = existing.get(w.id);
-    if(!node){
-      const holder = document.createElement('div');
-      holder.innerHTML = wallpaperCardMarkup(w);
-      node = holder.firstElementChild;
-      wireWallpaperCard(node);
-    }
-    if(prev){
-      if(prev.nextElementSibling !== node) prev.after(node);
-    }else if(wpEl.firstElementChild !== node){
-      wpEl.prepend(node);
-    }
-    prev = node;
-  });
-  existing.forEach((node, id)=>{ if(!wantedIds.has(id)) node.remove(); });
-}
-function updateWallpaperLoadingIndicator(){
-  const wrap = $('wallpaperSpinnerWrap');
-  if(!wrap) return;
-  wrap.hidden = !wallpapersLoadingMore;
-}
 
 /* ============ Lightbox ============ */
 /* 'gallery' mode tracks the CURRENT PHOTO'S ID, not a raw array index. The
@@ -2507,45 +2261,10 @@ function updateWallpaperLoadingIndicator(){
    every navigation can't drift like that, no matter what else about the
    array changes in the meantime. */
 let lbCurrentId = null;
-let lbMode = 'gallery'; // 'gallery' = navigable set from photosCache, 'single' = one fixed image (e.g. wallpaper preview)
+let lbMode = 'gallery'; // 'gallery' = navigable set from photosCache, 'single' = one fixed image (one fixed image)
 let lbSingleItem = null;
 let lbLastFocused = null;
 
-/* A plain <a download> silently fails to force a download for cross-origin
-   URLs (like Firebase Storage) in most browsers — it just opens the image
-   instead. Fetching it ourselves and downloading from a blob: URL works for
-   both that case and legacy base64 wallpapers alike. */
-async function downloadWallpaper(w, btn){
-  if(!w) return;
-  const original = btn.innerHTML;
-  btn.disabled = true;
-  btn.innerHTML = '<span aria-hidden="true">⬇</span> Downloading…';
-  try{
-    const res = await withTimeout(fetch(w.image), NET_DOWNLOAD_TIMEOUT_MS, 'wallpaper-download');
-    // data: URLs (how every wallpaper is stored today) never fail this way,
-    // but the function already anticipates URLs that could (see the comment
-    // above) — for those, an HTTP error status still resolves normally
-    // instead of rejecting, and without this check the "error" page's own
-    // body would silently get saved as if it were the wallpaper's image.
-    if(!res.ok) throw new Error('fetch-failed:' + res.status);
-    const blob = await res.blob();
-    const blobUrl = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = blobUrl;
-    a.download = ((w.title || '').replace(/[^a-z0-9-_]+/gi, '-').replace(/^-+|-+$/g, '') || ('senior-27-wallpaper-' + w.id)) + '.jpg';
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    setTimeout(()=> URL.revokeObjectURL(blobUrl), 4000);
-  }catch(e){
-    // Fallback: at least open it so the person can save it manually
-    window.open(w.image, '_blank');
-    showToast('Opened the wallpaper in a new tab — long-press or right-click to save it', 'error');
-  }finally{
-    btn.disabled = false;
-    btn.innerHTML = original;
-  }
-}
 
 function openLightbox(id){
   lbMode = 'gallery';
@@ -2570,11 +2289,11 @@ function closeLightbox(){
   const lb = $('lightbox');
   if(!lb.classList.contains('active')) return;
   lb.classList.remove('active');
-  document.body.style.overflow = '';
+  document.body.style.overflow = albumOverlayOpen ? 'hidden' : '';
   if(lbLastFocused && typeof lbLastFocused.focus === 'function') lbLastFocused.focus();
 }
 function updateLightbox(){
-  const item = lbMode === 'gallery' ? photoById(lbCurrentId) : lbSingleItem;
+  const item = lbMode === 'single' ? lbSingleItem : (lbMode === 'album' ? albumPhotos.find(p => p.id === lbCurrentId) : photoById(lbCurrentId));
   // In gallery mode specifically, the photo can legitimately be gone by the
   // time this runs (the Owner deleted it in another tab, say) — that's a
   // real, if rare, case rather than a bug, so this closes quietly instead
@@ -2588,17 +2307,17 @@ function updateLightbox(){
    than trusting a number computed on a previous turn — see the comment on
    lbCurrentId above for why that distinction matters here specifically. */
 function lbGoPrev(){
-  if(lbMode !== 'gallery' || photosCache.length === 0) return;
-  const idx = photosCache.findIndex(p => p.id === lbCurrentId);
-  const prevIdx = idx === -1 ? 0 : (idx - 1 + photosCache.length) % photosCache.length;
-  lbCurrentId = photosCache[prevIdx].id;
+  if(lbMode === 'single' || lbList().length === 0) return;
+  const idx = lbList().findIndex(p => p.id === lbCurrentId);
+  const prevIdx = idx === -1 ? 0 : (idx - 1 + lbList().length) % lbList().length;
+  lbCurrentId = lbList()[prevIdx].id;
   updateLightbox();
 }
 function lbGoNext(){
-  if(lbMode !== 'gallery' || photosCache.length === 0) return;
-  const idx = photosCache.findIndex(p => p.id === lbCurrentId);
-  const nextIdx = idx === -1 ? 0 : (idx + 1) % photosCache.length;
-  lbCurrentId = photosCache[nextIdx].id;
+  if(lbMode === 'single' || lbList().length === 0) return;
+  const idx = lbList().findIndex(p => p.id === lbCurrentId);
+  const nextIdx = idx === -1 ? 0 : (idx + 1) % lbList().length;
+  lbCurrentId = lbList()[nextIdx].id;
   updateLightbox();
 }
 
@@ -2758,18 +2477,14 @@ function closePassModal(){
    could be reordered or deleted from by mistake. */
 async function openOwnerDashboard(){
   const needsPhotos = !galleryFullyLoaded;
-  const needsWallpapers = !wallpapersFullyLoaded;
-  if(needsPhotos || needsWallpapers){
+  if(needsPhotos){
     try{
-      await withBusyButton(ownerBtn, 'Loading…', ()=> Promise.all([
-        needsPhotos ? loadAllPhotosForAdmin() : Promise.resolve(),
-        needsWallpapers ? loadAllWallpapersForAdmin() : Promise.resolve(),
-      ]));
+      await withBusyButton(ownerBtn, 'Loading…', ()=> loadAllPhotosForAdmin());
     }catch(e){
       showToast('Could not load your content — check your connection and try again', 'error');
       return;
     }
-    renderPublicSite();   // the page behind now has the complete gallery and wallpapers too
+    renderPublicSite();   // the page behind now has the complete gallery too
   }
   $('dashOverlay').classList.add('open');
   renderDashboard();
@@ -2854,6 +2569,7 @@ function activateDashTab(tab){
   tab.classList.add('active');
   tab.setAttribute('aria-selected','true');
   $('panel-' + tab.dataset.tab).classList.add('active');
+  if(tab.dataset.tab === 'albums') renderDashAlbums();
 }
 document.querySelectorAll('.dash-tab').forEach(tab => {
   tab.addEventListener('click', ()=> activateDashTab(tab));
@@ -2897,7 +2613,6 @@ function renderDashboard(){
   renderDashGalleryGrid();
   renderMomentAddPicker();
   renderDashMomentsList();
-  renderDashWallpaperList();
   dashDirty = false; // fields now reflect saved state
 }
 
@@ -2929,7 +2644,7 @@ wireSuggestBtn('useSuggestFooterTagline', 'in_footerTagline', 'Memories today, l
 function renderHeroMainPicker(){
   const el = $('heroMainPicker');
   if(photosCache.length === 0){ el.innerHTML = '<p style="font-size:12.5px; color:var(--ink-soft);">Upload photos in the Gallery tab first.</p>'; return; }
-  el.innerHTML = photosCache.map(p => `<img src="${p.thumb || p.image}" data-id="${esc(p.id)}" alt="${esc(p.caption||'')}" ${brokenImgAttr()} class="${p.id===selectedHeroMainId?'selected':''}">`).join('');
+  el.innerHTML = photosCache.map(p => `<img src="${safeSrc(p.thumb || p.image)}" data-id="${esc(p.id)}" alt="${esc(p.caption||'')}" ${brokenImgAttr()} class="${p.id===selectedHeroMainId?'selected':''}">`).join('');
   el.querySelectorAll('img').forEach(img => img.addEventListener('click', ()=>{
     selectedHeroMainId = img.dataset.id;
     renderHeroMainPicker();
@@ -2938,7 +2653,7 @@ function renderHeroMainPicker(){
 function renderHeroThumbsPicker(){
   const el = $('heroThumbsPicker');
   if(photosCache.length === 0){ el.innerHTML = '<p style="font-size:12.5px; color:var(--ink-soft);">Upload photos in the Gallery tab first.</p>'; return; }
-  el.innerHTML = photosCache.map(p => `<img src="${p.thumb || p.image}" data-id="${esc(p.id)}" alt="${esc(p.caption||'')}" ${brokenImgAttr()} class="${selectedHeroThumbIds.includes(p.id)?'selected':''}">`).join('');
+  el.innerHTML = photosCache.map(p => `<img src="${safeSrc(p.thumb || p.image)}" data-id="${esc(p.id)}" alt="${esc(p.caption||'')}" ${brokenImgAttr()} class="${selectedHeroThumbIds.includes(p.id)?'selected':''}">`).join('');
   el.querySelectorAll('img').forEach(img => img.addEventListener('click', ()=>{
     const id = img.dataset.id;
     const i = selectedHeroThumbIds.indexOf(id);
@@ -2953,7 +2668,7 @@ function renderHeroThumbsPicker(){
 function renderAboutImagePicker(){
   const el = $('aboutImagePicker');
   if(photosCache.length === 0){ el.innerHTML = '<p style="font-size:12.5px; color:var(--ink-soft);">Upload photos in the Gallery tab first.</p>'; return; }
-  el.innerHTML = photosCache.map(p => `<img src="${p.thumb || p.image}" data-id="${esc(p.id)}" alt="${esc(p.caption||'')}" ${brokenImgAttr()} class="${p.id===selectedAboutImageId?'selected':''}">`).join('');
+  el.innerHTML = photosCache.map(p => `<img src="${safeSrc(p.thumb || p.image)}" data-id="${esc(p.id)}" alt="${esc(p.caption||'')}" ${brokenImgAttr()} class="${p.id===selectedAboutImageId?'selected':''}">`).join('');
   el.querySelectorAll('img').forEach(img => img.addEventListener('click', ()=>{
     selectedAboutImageId = img.dataset.id;
     renderAboutImagePicker();
@@ -3022,6 +2737,8 @@ $('saveSettingsBtn').addEventListener('click', ()=> withBusyButton($('saveSettin
 
 /* ============ Gallery management ============ */
 function renderDashGalleryGrid(){
+  const gc = $('dashGalleryCount');
+  if(gc) gc.innerHTML = '<b>' + photosCache.length + '</b> <span>photo' + (photosCache.length === 1 ? '' : 's') + ' in the Gallery</span>';
   const el = $('dashGalleryGrid');
   backfillThumbs(PHOTOS, photosCache); // fire-and-forget; no-ops once everything has a thumb
   if(photosCache.length === 0){
@@ -3030,7 +2747,7 @@ function renderDashGalleryGrid(){
   }
   el.innerHTML = photosCache.map((p, i) => `
     <div class="dash-photo-tile" data-id="${esc(p.id)}">
-      <img src="${p.thumb || p.image}" alt="${esc(p.caption||'')}" ${brokenImgAttr()}>
+      <img src="${safeSrc(p.thumb || p.image)}" alt="${esc(p.caption||'')}" ${brokenImgAttr()}>
       <div class="tile-flags">
         ${p.isFeatured ? '<span class="flag-badge">Featured</span>' : ''}
         ${p.showOnHome ? '<span class="flag-badge">Home</span>' : ''}
@@ -3408,7 +3125,7 @@ let momentAddBusy = false;
 function renderMomentAddPicker(){
   const el = $('momentAddPicker');
   if(photosCache.length === 0){ el.innerHTML = '<p style="font-size:12.5px; color:var(--ink-soft);">Upload photos in the Gallery tab first.</p>'; return; }
-  el.innerHTML = photosCache.map(p => `<img src="${p.thumb || p.image}" data-id="${esc(p.id)}" alt="${esc(p.caption||'')}" ${brokenImgAttr()}>`).join('');
+  el.innerHTML = photosCache.map(p => `<img src="${safeSrc(p.thumb || p.image)}" data-id="${esc(p.id)}" alt="${esc(p.caption||'')}" ${brokenImgAttr()}>`).join('');
   el.querySelectorAll('img').forEach(img => img.addEventListener('click', async ()=>{
     // Without this, clicking several thumbnails in quick succession (easy to
     // do while impatient, or on a slow connection where nothing visibly
@@ -3439,7 +3156,7 @@ function renderDashMomentsList(){
     const dateValue = hasOverride ? m.dateOverride : photoDate;
     return `
     <div class="dash-list-row" data-id="${esc(m.id)}">
-      ${p ? `<img src="${p.thumb || p.image}" alt="${esc(m.title||'')}" ${brokenImgAttr()}>` : `<div style="width:60px;height:60px;flex-shrink:0;background:var(--card);"></div>`}
+      ${p ? `<img src="${safeSrc(p.thumb || p.image)}" alt="${esc(m.title||'')}" ${brokenImgAttr()}>` : `<div style="width:60px;height:60px;flex-shrink:0;background:var(--card);"></div>`}
       <div class="row-fields">
         <input type="text" class="m-title" placeholder="Title" value="${esc(m.title||'')}">
         <input type="text" class="m-caption" placeholder="Caption" value="${esc(m.caption||'')}">
@@ -3530,125 +3247,491 @@ async function moveMoment(id, dir){
   }
 }
 
-/* ============ Wallpaper management ============ */
-$('wallpaperUploadDrop').addEventListener('click', ()=>{
-  if($('wallpaperUploadDrop').dataset.busy === '1') return;
-  $('wallpaperFileInput').click();
-});
-$('wallpaperFileInput').addEventListener('change', async ()=>{
-  const file = $('wallpaperFileInput').files[0];
-  if(!file) return;
-  const drop = $('wallpaperUploadDrop');
-  const originalLabel = drop.textContent;
-  drop.dataset.busy = '1';
-  drop.textContent = 'Uploading…';
+
+/* ============ Albums ============
+   Data lives in small docs under `settings` (no new collection / rules):
+   settings/albums = { order:[albumId,...] }
+   settings/album_<id> = { title, photoIds:[ordered], coverThumb, coverId }
+   Nothing here is fetched until a visitor taps "Albums"; an album's photos
+   are fetched only when that album is opened, 10 at a time. */
+const ALBUM_PAGE = 10;
+const ALBUM_INDEX = SETTINGS.doc('albums');
+const albumDocRef = id => SETTINGS.doc('album_' + id);
+let albumListCache = null, albumListPromise = null;
+const albumState = {};
+let albumOpenId = null, albumLoading = false, albumLastFocus = null;
+const ownDocCache = {};
+const isOwnId = id => String(id).startsWith('own_');
+function parseYMD(v){ const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(v || ''); return m ? new Date(+m[1], +m[2] - 1, +m[3]) : null; }
+function fmtAlbumDate(a){
+  const d1 = parseYMD(a.date), d2 = parseYMD(a.dateEnd);
+  if(!d1) return '';
+  const f = (d, o)=> d.toLocaleDateString('en-GB', o);
+  if(!d2 || +d2 <= +d1) return f(d1, { day:'numeric', month:'long', year:'numeric' });
+  if(d1.getFullYear() !== d2.getFullYear()) return f(d1, { day:'numeric', month:'short', year:'numeric' }) + ' – ' + f(d2, { day:'numeric', month:'short', year:'numeric' });
+  if(d1.getMonth() !== d2.getMonth()) return f(d1, { day:'numeric', month:'short' }) + ' – ' + f(d2, { day:'numeric', month:'short', year:'numeric' });
+  return d1.getDate() + ' – ' + f(d2, { day:'numeric', month:'long', year:'numeric' });
+}
+function lbList(){ return lbMode === 'album' ? albumPhotos : photosCache; }
+
+function fetchAlbumList(force){
+  if(albumListCache && !force) return Promise.resolve(albumListCache);
+  if(albumListPromise) return albumListPromise;
+  albumListPromise = (async ()=>{
+    const idx = await readWithRetry(()=> ALBUM_INDEX.get(), 'album-index', 2);
+    const order = idx.exists && Array.isArray(idx.data().order) ? idx.data().order : [];
+    const docs = await Promise.all(order.map(id => readWithRetry(()=> albumDocRef(id).get(), 'album-doc', 2).catch(()=> null)));
+    albumListCache = docs.map((d, i)=> d && d.exists ? { id: order[i], ...d.data() } : null).filter(Boolean);
+    return albumListCache;
+  })().finally(()=>{ albumListPromise = null; });
+  return albumListPromise;
+}
+const albumById = id => (albumListCache || []).find(a => a.id === id);
+
+/* ---- Visitor side ---- */
+let albumCoverIO = null;
+const albumCoverCache = {};
+function albumCoverKey(a){ return a.id + ':' + (a.coverV || 0); }
+function loadAlbumCover(a){
+  const k = albumCoverKey(a);
+  if(albumCoverCache[k]) return albumCoverCache[k];
+  const pr = readWithRetry(()=> SETTINGS.doc('albumcover_' + a.id).get(), 'album-cover', 2).then(d => (d.exists && d.data().image) || '');
+  albumCoverCache[k] = pr;
+  pr.then(v => { if(!v) delete albumCoverCache[k]; }, ()=>{ delete albumCoverCache[k]; });
+  return pr;
+}
+function fillCoverImg(img, src){
+  if(!img || !src || img.getAttribute('src')) return;
+  img.addEventListener('load', ()=>{
+    img.classList.add('loaded');
+    const box = img.parentElement;
+    if(box){ box.style.aspectRatio = 'auto'; box.style.minHeight = '0'; }   // from now on the photo itself sets the size
+  }, { once: true });
+  img.setAttribute('src', src);
+}
+function renderAlbumGrid(list){
+  $('albumGrid').innerHTML = list.map(a => {
+    const n = (a.photoIds || []).length, d = fmtAlbumDate(a);
+    const kind = a.coverV ? 'new' : (a.coverThumb ? 'legacy' : '');
+    const holder = kind === '' ? 'aspect-ratio:4/5' : (a.coverW && a.coverH ? `aspect-ratio:${+a.coverW}/${+a.coverH}` : 'min-height:200px');
+    return `<button class="album-card${kind ? '' : ' no-cover'}" data-id="${esc(a.id)}"${kind === 'new' ? ' data-cover="1"' : ''}>
+      <div class="album-cover" style="${holder}">${kind ? `<img alt="" decoding="async" ${brokenImgAttr()}>` : ''}</div>
+      <div class="album-caption">${d ? `<div class="album-date">${esc(d)}</div>` : ''}<div class="album-title">${esc(a.title)}</div><div class="album-cta">${n} photo${n === 1 ? '' : 's'} →</div></div></button>`;
+  }).join('');
+  const grid = $('albumGrid');
+  grid.querySelectorAll('.album-card').forEach(c => c.addEventListener('click', ()=> openAlbum(c.dataset.id)));
+  list.forEach(a => { if(!a.coverV && a.coverThumb){ fillCoverImg(grid.querySelector('.album-card[data-id="' + a.id + '"] img'), a.coverThumb); } });
+  const cards = Array.from(grid.querySelectorAll('.album-card[data-cover="1"]'));
+  const fill = (card)=>{ const a = albumById(card.dataset.id); if(!a) return; loadAlbumCover(a).then(src => fillCoverImg(card.querySelector('img'), src)).catch(()=>{}); };
+  if(albumCoverIO) albumCoverIO.disconnect();
+  if(!('IntersectionObserver' in window)){ cards.forEach(fill); return; }
+  albumCoverIO = new IntersectionObserver((es)=>{ es.forEach(e => { if(e.isIntersecting){ albumCoverIO.unobserve(e.target); fill(e.target); } }); }, { root: $('albumView'), rootMargin: '500px 0px' });
+  cards.forEach(c => albumCoverIO.observe(c));
+}
+async function loadAlbumList(){
+  const msg = $('albumListMsg'), txt = $('albumListMsgText'), retry = $('albumListRetry');
+  retry.hidden = true;
+  if(!albumListCache){ msg.hidden = false; txt.textContent = 'Loading…'; $('albumGrid').innerHTML = ''; }
   try{
-    /* 1600px @ quality 0.8 was too ambitious for the 780,000-byte cap on
-       most wallpaper-style images (skies, gradients, portrait aspect
-       ratios) — it was routinely tripping the step-down loop in
-       compressImageToLimit, which is what made wallpapers look
-       noticeably soft/blocky. 1200px @ quality 0.87 fits comfortably
-       under the cap on the first pass for the vast majority of images, so
-       the loop rarely has to kick in at all. This only affects wallpapers
-       uploaded from now on — an already-uploaded wallpaper that looks
-       soft was compressed at the old settings and can't be sharpened
-       after the fact; re-uploading the original file is the fix for those. */
-    const { dataUrl, thumb, thumbV } = await fileToCompressed(file, 1200, 0.87);
-    let maxOrder = wallpapersCache.reduce((m,w)=> Math.max(m, w.sortOrder ?? 0), 0);
-    await addDocSafely(WALLPAPERS, { image: dataUrl, thumb, thumbV, title:'', description:'', sortOrder: maxOrder + 1, createdAt: Date.now() }, 20000, 'wallpaper-save');
-    $('wallpaperFileInput').value = '';
-    await loadAllWallpapersForAdmin();
-    renderDashWallpaperList();
-    renderPublicSite();
-    showToast('Wallpaper uploaded', 'success');
+    const list = await fetchAlbumList(false);
+    if(!albumOverlayOpen) return;
+    renderAlbumGrid(list);
+    msg.hidden = list.length > 0;
+    txt.textContent = 'No albums yet';
   }catch(e){
-    showToast(
-      e && String(e.message).startsWith('timeout')
-        ? 'Upload is taking too long — check your connection and try again'
-        : 'Could not upload wallpaper — check your connection and try again',
-      'error'
-    );
+    msg.hidden = false; txt.textContent = 'Could not load albums'; retry.hidden = false;
   }
-  finally{
-    drop.dataset.busy = '0';
-    drop.textContent = originalLabel;
+}
+function showAlbumList(){
+  albumOpenId = null; albumPhotos = [];
+  $('albumPhotosPane').hidden = true; $('albumListPane').hidden = false;
+  $('albumEyebrow').textContent = 'By Occasion';
+  $('albumViewTitle').textContent = 'Albums';
+  $('albumBackBtn').innerHTML = '&#10005; Close';
+  $('albumViewMeta').hidden = true;
+  $('albumView').scrollTop = 0;
+  if(albumListCache){ renderAlbumGrid(albumListCache); $('albumListMsg').hidden = albumListCache.length > 0; $('albumListMsgText').textContent = 'No albums yet'; }
+}
+function openAlbumsOverlay(){
+  if(albumOverlayOpen) return;
+  albumOverlayOpen = true;
+  albumLastFocus = document.activeElement;
+  history.pushState({ albumDepth: 1 }, '');
+  $('albumView').classList.add('active');
+  document.body.style.overflow = 'hidden';
+  showAlbumList();
+  $('albumBackBtn').focus();
+  loadAlbumList();
+}
+function closeAlbumsUI(){
+  if(!albumOverlayOpen) return;
+  closeLightbox();
+  albumOverlayOpen = false; albumOpenId = null; albumPhotos = [];
+  $('albumView').classList.remove('active');
+  document.body.style.overflow = '';
+  if(albumLastFocus && albumLastFocus.focus) albumLastFocus.focus();
+}
+function appendAlbumItems(list){
+  if(!list.length) return;
+  const holder = document.createElement('div');
+  holder.innerHTML = list.map(galleryItemMarkup).join('');
+  holder.querySelectorAll('.g-item').forEach(n => {
+    const open = ()=>{ lbMode = 'album'; lbCurrentId = n.dataset.id; showLightbox(); };
+    n.addEventListener('click', open);
+    n.addEventListener('keydown', (e)=>{ if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); open(); } });
+  });
+  $('albumMasonry').append(...Array.from(holder.children));
+}
+function openAlbum(id){
+  const a = albumById(id);
+  if(!a) return;
+  history.pushState({ albumDepth: 2 }, '');
+  albumOpenId = id;
+  const st = albumState[id] || (albumState[id] = { photos: [], next: 0 });
+  albumPhotos = st.photos;
+  $('albumListPane').hidden = true; $('albumPhotosPane').hidden = false;
+  $('albumEyebrow').textContent = 'Album';
+  $('albumViewTitle').textContent = a.title;
+  const dTxt = fmtAlbumDate(a), cnt = (a.photoIds || []).length;
+  $('albumDateText').textContent = dTxt;
+  $('albumCountText').textContent = cnt + ' photo' + (cnt === 1 ? '' : 's');
+  $('albumViewMeta').hidden = false;
+  $('albumBackBtn').innerHTML = '&larr; All albums';
+  $('albumMasonry').innerHTML = '';
+  $('albumRetryBtn').hidden = true;
+  $('albumEmpty').hidden = (a.photoIds || []).length > 0;
+  appendAlbumItems(st.photos);
+  $('albumView').scrollTop = 0;
+  loadAlbumPage();
+}
+async function loadAlbumPage(){
+  const id = albumOpenId;
+  if(!id || albumLoading) return;
+  const a = albumById(id), st = albumState[id];
+  if(!a || !st) return;
+  const ids = a.photoIds || [];
+  if(st.next >= ids.length) return;
+  albumLoading = true; $('albumRetryBtn').hidden = true; $('albumSpinnerWrap').hidden = false;
+  let ok = true;
+  try{
+    let fresh = [];
+    while(!fresh.length && st.next < ids.length){
+      const chunk = ids.slice(st.next, st.next + ALBUM_PAGE);
+      const gIds = chunk.filter(x => !isOwnId(x)), oIds = chunk.filter(isOwnId);
+      const [gSnap, oSnaps] = await withTimeout(Promise.all([
+        gIds.length ? PHOTOS.where(firebase.firestore.FieldPath.documentId(), 'in', gIds).get() : Promise.resolve(null),
+        Promise.all(oIds.map(i => SETTINGS.doc('albumphoto_' + i).get()))
+      ]), NET_WRITE_TIMEOUT_MS, 'album-load');
+      if(albumOpenId !== id || albumState[id] !== st) return;
+      const by = {};
+      if(gSnap) gSnap.docs.forEach(d => { by[d.id] = { id: d.id, ...d.data() }; });
+      oSnaps.forEach((d, i) => { if(d.exists) by[oIds[i]] = { id: oIds[i], ...d.data() }; });
+      const caps = a.captions || {};
+      fresh = chunk.map(x => by[x]).filter(Boolean);
+      fresh.forEach(p => { if(p.id in caps) p.caption = caps[p.id]; });
+      st.next += chunk.length;
+    }
+    st.photos.push(...fresh);
+    appendAlbumItems(fresh);
+  }catch(e){
+    ok = false;
+    if(albumOpenId === id){
+      showToast(isTimeoutError(e) ? 'Taking too long — check your connection and try again' : 'Could not load photos — try again', 'error');
+      $('albumRetryBtn').hidden = false;
+    }
+  }finally{
+    albumLoading = false; $('albumSpinnerWrap').hidden = true;
   }
+  if(ok && albumOpenId === id) maybeLoadMoreAlbum();
+}
+function maybeLoadMoreAlbum(){
+  if(!albumOpenId || albumLoading || !$('albumRetryBtn').hidden) return;
+  const a = albumById(albumOpenId), st = albumState[albumOpenId];
+  if(!a || !st || st.next >= (a.photoIds || []).length) return;
+  if($('albumMasonry').getBoundingClientRect().bottom < window.innerHeight + 700) loadAlbumPage();
+}
+$('albumView').addEventListener('scroll', maybeLoadMoreAlbum, { passive: true });
+$('albumRetryBtn').addEventListener('click', loadAlbumPage);
+$('albumListRetry').addEventListener('click', loadAlbumList);
+$('albumBackBtn').addEventListener('click', ()=>{ if(history.state && history.state.albumDepth) history.back(); else if(albumOpenId) showAlbumList(); else closeAlbumsUI(); });
+$('navAlbums').addEventListener('click', (e)=>{ e.preventDefault(); openAlbumsOverlay(); });
+window.addEventListener('popstate', (e)=>{
+  if(!albumOverlayOpen) return;
+  closeLightbox();
+  const d = (e.state && e.state.albumDepth) || 0;
+  if(d === 1) showAlbumList(); else if(d === 0) closeAlbumsUI();
 });
-function renderDashWallpaperList(){
-  const el = $('dashWallpaperList');
-  backfillThumbs(WALLPAPERS, wallpapersCache); // fire-and-forget; no-ops once everything has a thumb
-  if(wallpapersCache.length === 0){ el.innerHTML = '<div class="empty-state"><span class="eyebrow">No wallpapers yet</span><p>Upload one above.</p></div>'; return; }
-  el.innerHTML = wallpapersCache.map(w => `
-    <div class="dash-list-row" data-id="${esc(w.id)}">
-      <img src="${w.thumb || w.image}" alt="${esc(w.title||'')}" ${brokenImgAttr()}>
-      <div class="row-fields">
-        <input type="text" class="w-title" placeholder="Title" value="${esc(w.title||'')}">
-        <input type="text" class="w-desc" placeholder="Description" value="${esc(w.description||'')}">
-      </div>
+document.addEventListener('keydown', (e)=>{
+  if(e.key !== 'Escape' || !albumOverlayOpen || $('lightbox').classList.contains('active')) return;
+  e.preventDefault(); $('albumBackBtn').click();
+}, true);
+
+/* ---- Owner side ---- */
+let albumManageId = null;
+const albumPick = new Set();
+const COVER_LIMIT = 700000;   // chars of data URL; keeps the cover doc well under Firestore\'s 1 MB limit
+const COVER_EDGE = 1600;      // longest side, never upscaled
+function loadImageEl(src){
+  return new Promise((resolve, reject)=>{
+    const im = new Image();
+    if(/^https?:/i.test(src)) im.crossOrigin = 'anonymous';
+    im.onload = ()=> resolve(im);
+    im.onerror = ()=> reject(new Error('image-load'));
+    im.src = src;
+  });
+}
+async function buildCover(src){
+  const im = await loadImageEl(src);
+  const nw = im.naturalWidth, nh = im.naturalHeight;
+  if(!nw || !nh) throw new Error('image-size');
+  // Already a JPEG that fits: keep the original bytes — zero quality loss.
+  if(/^data:image\/jpe?g/i.test(src) && src.length <= COVER_LIMIT) return { image: src, width: nw, height: nh };
+  let scale = Math.min(1, COVER_EDGE / Math.max(nw, nh));
+  for(let round = 0; round < 6; round++){
+    const w = Math.max(1, Math.round(nw * scale)), h = Math.max(1, Math.round(nh * scale));
+    const c = document.createElement('canvas'); c.width = w; c.height = h;
+    const x = c.getContext('2d');
+    x.fillStyle = '#fff'; x.fillRect(0, 0, w, h);
+    x.imageSmoothingQuality = 'high';
+    x.drawImage(im, 0, 0, w, h);
+    for(const q of [0.95, 0.92, 0.88, 0.84, 0.8, 0.75]){
+      const out = c.toDataURL('image/jpeg', q);
+      if(out.length <= COVER_LIMIT) return { image: out, width: w, height: h };
+    }
+    scale *= 0.85;
+  }
+  throw new Error('cover-too-large');
+}
+async function saveCoverFromPhoto(aid, photo){
+  if(!photo || !photo.image) throw new Error('no-image');
+  const cv = await buildCover(photo.image);
+  const now = Date.now();
+  await withTimeout(SETTINGS.doc('albumcover_' + aid).set({ image: cv.image, width: cv.width, height: cv.height, updatedAt: now }), 25000, 'album-cover-save');
+  await saveAlbumFields(aid, { coverV: now, coverW: cv.width, coverH: cv.height, coverId: photo.id, coverThumb: '' });
+  const a = albumById(aid);
+  if(a) albumCoverCache[albumCoverKey(a)] = Promise.resolve(cv.image);
+}
+async function saveAlbumFields(id, fields){
+  await withTimeout(albumDocRef(id).update(fields), NET_WRITE_TIMEOUT_MS, 'album-save');
+  const a = albumById(id);
+  if(a) Object.assign(a, fields);
+  delete albumState[id];
+}
+const adminPhoto = pid => photoById(pid) || ownDocCache[pid];
+async function loadOwnDocs(a){
+  const need = (a.photoIds || []).filter(i => isOwnId(i) && !ownDocCache[i]);
+  await Promise.all(need.map(async i => {
+    try{ const d = await readWithRetry(()=> SETTINGS.doc('albumphoto_' + i).get(), 'album-own', 2); if(d.exists) ownDocCache[i] = { id: i, ...d.data() }; }catch(e){}
+  }));
+}
+async function saveAlbumOrder(ids){
+  await withTimeout(ALBUM_INDEX.set({ order: ids }), NET_WRITE_TIMEOUT_MS, 'album-order');
+}
+async function adminRun(fn, okMsg){
+  try{ await fn(); if(okMsg) showToast(okMsg, 'success'); }
+  catch(e){ showToast(isTimeoutError(e) ? 'Taking too long — check your connection and try again' : 'Could not save — try again', 'error'); }
+  drawDashAlbums();
+}
+async function renderDashAlbums(){
+  const el = $('dashAlbumsList');
+  el.innerHTML = '<p style="font-size:12.5px; color:var(--ink-soft);">Loading…</p>';
+  try{ await fetchAlbumList(true); }
+  catch(e){ el.innerHTML = '<p style="font-size:12.5px; color:var(--accent);">Could not load albums — switch tabs and come back to retry.</p>'; return; }
+  drawDashAlbums();
+}
+function manageMarkup(a){
+  const ids = a.photoIds || [], caps = a.captions || {};
+  const rows = ids.map((pid, i) => {
+    const p = adminPhoto(pid);
+    const eff = pid in caps ? caps[pid] : (p ? (p.caption || '') : '');
+    return `<div class="dash-list-row" data-pid="${esc(pid)}">
+      ${p ? `<img src="${safeSrc(p.thumb || p.image)}" alt="" ${brokenImgAttr()}>` : '<div style="width:64px; height:64px; background:var(--cream-deep);"></div>'}
+      <div class="row-fields"><input type="text" class="p-cap" placeholder="${p ? 'Caption (this album only)' : 'Photo missing'}" value="${esc(eff)}">${a.coverId === pid ? '<div class="m-date-row">Album cover</div>' : ''}</div>
+      <button class="btn-small" data-pact="cover">Cover</button>
+      <button class="btn-small" data-pact="up">↑</button>
+      <button class="btn-small" data-pact="down">↓</button>
+      <button class="btn-small danger" data-pact="remove">×</button>
+    </div>`;
+  }).join('');
+  const avail = photosCache.filter(x => !ids.includes(x.id));
+  return `<div class="album-manage" data-manage="${esc(a.id)}">
+    ${rows || '<p style="font-size:12.5px; color:var(--ink-soft); margin:0 0 6px;">No photos in this album yet.</p>'}
+    <div style="margin:14px 0 4px; display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+      <button class="btn-small dark" id="albumUploadBtn">Upload photos to this album</button>
+      <span style="font-size:11.5px; color:var(--ink-soft);">Uploaded photos live only in this album, not in the Gallery.</span>
+    </div>
+    <input type="file" id="albumUploadInput" accept="image/*" multiple hidden>
+    <label style="display:block; margin-top:14px; font-size:11.5px; text-transform:uppercase; letter-spacing:1px; font-weight:600;">Or add from the Gallery — tap to select</label>
+    <div class="picker-grid" id="albumPicker">${avail.length ? avail.map(x => `<img src="${safeSrc(x.thumb || x.image)}" data-id="${esc(x.id)}" alt="" ${brokenImgAttr()} class="${albumPick.has(x.id) ? 'selected' : ''}">`).join('') : '<p style="font-size:12.5px; color:var(--ink-soft); margin:0;">All gallery photos are already in this album.</p>'}</div>
+    <button class="btn-small dark" id="albumAddSelected">Add selected (${albumPick.size})</button>
+  </div>`;
+}
+function drawDashAlbums(){
+  const el = $('dashAlbumsList');
+  const list = albumListCache || [];
+  const ac = $('dashAlbumsCount');
+  if(ac) ac.innerHTML = '<b>' + list.length + '</b> <span>album' + (list.length === 1 ? '' : 's') + '</span>';
+  if(!list.length){ el.innerHTML = '<div class="empty-state"><span class="eyebrow">No albums yet</span><p>Create one above.</p></div>'; return; }
+  const dstyle = 'border:1px solid var(--line); background:#fff; padding:5px 6px; font-size:11.5px; font-family:inherit;';
+  el.innerHTML = list.map(a => {
+    const open = albumManageId === a.id, n = (a.photoIds || []).length;
+    return `<div class="dash-list-row" data-id="${esc(a.id)}">
+      ${a.coverV ? `<img data-acover="${esc(a.id)}" alt="" style="background:var(--cream-deep);">` : (a.coverThumb ? `<img src="${safeSrc(a.coverThumb)}" alt="">` : '<div style="width:64px; height:64px; background:var(--cream-deep);"></div>')}
+      <div class="row-fields"><input type="text" class="a-title" placeholder="Album name" value="${esc(a.title)}">
+        <div class="m-date-row" style="flex-wrap:wrap;"><span>Date</span><input type="date" class="a-date" style="${dstyle}" value="${esc(a.date || '')}"><span>to</span><input type="date" class="a-date2" style="${dstyle}" value="${esc(a.dateEnd || '')}" title="Optional end date for multi-day trips"><span>· ${n} photo${n === 1 ? '' : 's'}</span></div></div>
+      <button class="btn-small${open ? ' dark' : ''}" data-act="manage">${open ? 'Close' : 'Manage'}</button>
       <button class="btn-small" data-act="up">↑</button>
       <button class="btn-small" data-act="down">↓</button>
       <button class="btn-small danger" data-act="delete">Delete</button>
-    </div>`).join('');
-  el.querySelectorAll('.dash-list-row').forEach(row => {
+    </div>${open ? manageMarkup(a) : ''}`;
+  }).join('');
+  el.querySelectorAll('img[data-acover]').forEach(img => { const a = albumById(img.dataset.acover); if(a) loadAlbumCover(a).then(src => { if(src) img.src = src; }).catch(()=>{}); });
+  el.querySelectorAll(':scope > .dash-list-row').forEach(row => {
     const id = row.dataset.id;
-    row.querySelector('.w-title').addEventListener('change', (e)=> updateDocSafely(WALLPAPERS.doc(id), {title: e.target.value.trim()}, NET_WRITE_TIMEOUT_MS, 'wallpaper-title').then(()=>{loadAllWallpapersForAdmin().then(renderPublicSite); showToast('Saved','success');}).catch(err=> showToast(isTimeoutError(err) ? 'Taking too long — check your connection and try again' : 'Could not save title', 'error')));
-    row.querySelector('.w-desc').addEventListener('change', (e)=> updateDocSafely(WALLPAPERS.doc(id), {description: e.target.value.trim()}, NET_WRITE_TIMEOUT_MS, 'wallpaper-description').then(()=>{loadAllWallpapersForAdmin().then(renderPublicSite); showToast('Saved','success');}).catch(err=> showToast(isTimeoutError(err) ? 'Taking too long — check your connection and try again' : 'Could not save description', 'error')));
-    row.querySelector('[data-act=delete]').addEventListener('click', async (e)=>{
-      if(!confirm('Delete this wallpaper?')) return;
-      const btn = e.target;
-      btn.disabled = true; btn.textContent = 'Deleting…';
-      try{
-        const wp = wallpapersCache.find(w => w.id === id);
-        await deleteDocSafely(WALLPAPERS.doc(id), NET_WRITE_TIMEOUT_MS, 'wallpaper-delete');
-        if(wp) deleteStorageFileIfApplicable(wp.image);
-        await loadAllWallpapersForAdmin(); renderDashWallpaperList(); renderPublicSite();
-        showToast('Wallpaper deleted', 'success');
-      }catch(err){
-        btn.disabled = false; btn.textContent = 'Delete';
-        showToast(
-          err && String(err.message).startsWith('timeout')
-            ? 'Taking too long — check your connection and try again'
-            : 'Could not delete wallpaper',
-          'error'
-        );
-      }
+    const moveAlbum = (dir)=> adminRun(async ()=>{
+      const l = albumListCache.slice(), i = l.findIndex(x => x.id === id), j = i + dir;
+      if(i < 0 || j < 0 || j >= l.length) return;
+      [l[i], l[j]] = [l[j], l[i]];
+      await saveAlbumOrder(l.map(x => x.id));
+      albumListCache = l;
     });
-    row.querySelector('[data-act=up]').addEventListener('click', ()=> moveWallpaper(id, -1));
-    row.querySelector('[data-act=down]').addEventListener('click', ()=> moveWallpaper(id, 1));
+    row.querySelector('.a-title').addEventListener('change', (e)=>{
+      const t = e.target.value.trim();
+      if(t) adminRun(()=> saveAlbumFields(id, { title: t }), 'Saved'); else drawDashAlbums();
+    });
+    row.querySelector('.a-date').addEventListener('change', (e)=> adminRun(()=> saveAlbumFields(id, { date: e.target.value || '' }), 'Date saved'));
+    row.querySelector('.a-date2').addEventListener('change', (e)=> adminRun(()=> saveAlbumFields(id, { dateEnd: e.target.value || '' }), 'Date saved'));
+    row.querySelector('[data-act=manage]').addEventListener('click', async ()=>{
+      const opening = albumManageId !== id;
+      albumManageId = opening ? id : null; albumPick.clear();
+      drawDashAlbums();
+      if(opening){ await loadOwnDocs(albumById(id)); if(albumManageId === id) drawDashAlbums(); }
+    });
+    row.querySelector('[data-act=up]').addEventListener('click', ()=> moveAlbum(-1));
+    row.querySelector('[data-act=down]').addEventListener('click', ()=> moveAlbum(1));
+    row.querySelector('[data-act=delete]').addEventListener('click', ()=>{
+      if(!confirm('Delete this album? Photos from the Gallery stay in the Gallery; photos uploaded only to this album are deleted.')) return;
+      adminRun(async ()=>{
+        const a = albumById(id), rest = albumListCache.filter(x => x.id !== id);
+        const batch = db.batch();
+        batch.delete(albumDocRef(id));
+        (a.photoIds || []).filter(isOwnId).forEach(i => batch.delete(SETTINGS.doc('albumphoto_' + i)));
+        batch.delete(SETTINGS.doc('albumcover_' + id));
+        batch.set(ALBUM_INDEX, { order: rest.map(x => x.id) });
+        await withTimeout(batch.commit(), NET_WRITE_TIMEOUT_MS, 'album-delete');
+        albumListCache = rest; delete albumState[id];
+        if(albumManageId === id) albumManageId = null;
+      }, 'Album deleted');
+    });
+  });
+  const mp = el.querySelector('.album-manage');
+  if(!mp) return;
+  const aid = mp.dataset.manage;
+  const setIds = (fn, okMsg)=> adminRun(async ()=>{
+    const a = albumById(aid);
+    const ids = fn((a.photoIds || []).slice());
+    await saveAlbumFields(aid, { photoIds: ids });
+    if(!a.coverV && !a.coverThumb){
+      const first = ids.map(adminPhoto).find(x => x && x.image);
+      if(first){ try{ await saveCoverFromPhoto(aid, first); }catch(e){ /* cover is optional; owner can pick one manually */ } }
+    }
+  }, okMsg);
+  mp.querySelectorAll('[data-pid]').forEach(r => {
+    const pid = r.dataset.pid;
+    r.querySelector('.p-cap').addEventListener('change', (e)=> adminRun(()=> saveAlbumFields(aid, { captions: { ...(albumById(aid).captions || {}), [pid]: e.target.value.trim() } }), 'Caption saved'));
+    r.querySelector('[data-pact=up]').addEventListener('click', ()=> setIds(ids => { const i = ids.indexOf(pid); if(i > 0) [ids[i-1], ids[i]] = [ids[i], ids[i-1]]; return ids; }));
+    r.querySelector('[data-pact=down]').addEventListener('click', ()=> setIds(ids => { const i = ids.indexOf(pid); if(i > -1 && i < ids.length - 1) [ids[i+1], ids[i]] = [ids[i], ids[i+1]]; return ids; }));
+    r.querySelector('[data-pact=remove]').addEventListener('click', ()=> adminRun(async ()=>{
+      const a = albumById(aid), caps = { ...(a.captions || {}) };
+      delete caps[pid];
+      const ids = (a.photoIds || []).filter(x => x !== pid);
+      await saveAlbumFields(aid, { photoIds: ids, captions: caps });   // cover is its own copy: it stays until the owner changes it
+      if(isOwnId(pid)){ delete ownDocCache[pid]; SETTINGS.doc('albumphoto_' + pid).delete().catch(()=>{}); }
+    }, 'Photo removed'));
+    const coverBtn = r.querySelector('[data-pact=cover]');
+    coverBtn.addEventListener('click', async ()=>{
+      const ph = adminPhoto(pid);
+      if(!ph || !ph.image){ showToast('This photo is still loading — try again in a moment', 'error'); return; }
+      coverBtn.disabled = true; coverBtn.textContent = 'Saving…';
+      await adminRun(()=> saveCoverFromPhoto(aid, ph), 'Cover updated');
+    });
+  });
+  const addBtn = mp.querySelector('#albumAddSelected');
+  mp.querySelectorAll('#albumPicker img').forEach(img => img.addEventListener('click', ()=>{
+    const pid = img.dataset.id;
+    if(albumPick.has(pid)){ albumPick.delete(pid); img.classList.remove('selected'); } else { albumPick.add(pid); img.classList.add('selected'); }
+    addBtn.textContent = 'Add selected (' + albumPick.size + ')';
+  }));
+  addBtn.addEventListener('click', ()=>{
+    if(!albumPick.size) return;
+    const add = Array.from(albumPick);
+    albumPick.clear();
+    setIds(ids => ids.concat(add.filter(x => !ids.includes(x))), 'Photos added');
+  });
+  const upBtn = mp.querySelector('#albumUploadBtn'), upIn = mp.querySelector('#albumUploadInput');
+  upBtn.addEventListener('click', ()=> upIn.click());
+  upIn.addEventListener('change', async ()=>{
+    const files = Array.from(upIn.files || []);
+    if(!files.length) return;
+    upBtn.disabled = true;
+    const newIds = []; let failed = 0;
+    for(let i = 0; i < files.length; i++){
+      upBtn.textContent = 'Uploading ' + (i + 1) + '/' + files.length + '…';
+      try{
+        const c = await fileToCompressed(files[i], 1300, 0.85);
+        const pid = 'own_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+        const doc = { image: c.dataUrl, thumb: c.thumb || '', thumbV: c.thumbV || 0, width: c.width || 0, height: c.height || 0, createdAt: Date.now() };
+        await withTimeout(SETTINGS.doc('albumphoto_' + pid).set(doc), 20000, 'album-photo');
+        ownDocCache[pid] = { id: pid, ...doc };
+        newIds.push(pid);
+      }catch(e){ failed++; }
+    }
+    upIn.value = '';
+    if(newIds.length) await setIds(ids => ids.concat(newIds), newIds.length + ' photo' + (newIds.length === 1 ? '' : 's') + ' uploaded' + (failed ? ' (' + failed + ' failed)' : ''));
+    else { showToast('Upload failed — check your connection and try again', 'error'); drawDashAlbums(); }
   });
 }
-let wallpapersReorderBusy = false;
-async function moveWallpaper(id, dir){
-  if(wallpapersReorderBusy) return;
-  const idx = wallpapersCache.findIndex(w => w.id === id);
-  const swapIdx = idx + dir;
-  if(swapIdx < 0 || swapIdx >= wallpapersCache.length) return;
-  const a = wallpapersCache[idx], b = wallpapersCache[swapIdx];
-  const aOrder = a.sortOrder ?? idx, bOrder = b.sortOrder ?? swapIdx;
-  wallpapersReorderBusy = true;
-  setListBusy('dashWallpaperList', true);
+$('addAlbumBtn').addEventListener('click', async ()=>{
+  const t = $('newAlbumTitle').value.trim();
+  if(!t) return;
+  const btn = $('addAlbumBtn'); btn.disabled = true;
   try{
-    // Atomic swap — see reorderPair's comment (same reasoning as movePhoto).
-    await reorderPair(WALLPAPERS, a, b, aOrder, bOrder, 15000, 'wallpaper-reorder');
-    // Same reasoning as movePhoto above: wallpaper documents also carry
-    // base64 image+thumb data, so re-fetching the whole collection here was
-    // just as costly as it was for the Gallery — update in-memory instead.
-    a.sortOrder = bOrder; b.sortOrder = aOrder;
-    wallpapersCache = sortByOrderThenCreated(wallpapersCache);
-    renderDashWallpaperList();
-    renderPublicSite();
-  }catch(e){
-    showToast(
-      e && String(e.message).startsWith('timeout')
-        ? 'Taking too long — check your connection and try again'
-        : 'Could not reorder — try again',
-      'error'
-    );
-  }finally{
-    wallpapersReorderBusy = false;
-    setListBusy('dashWallpaperList', false);
+    if(!albumListCache) await fetchAlbumList(true);
+    const id = 'a' + Date.now().toString(36);
+    const batch = db.batch();
+    batch.set(albumDocRef(id), { title: t, photoIds: [], coverThumb: '', coverId: '', createdAt: Date.now() });
+    batch.set(ALBUM_INDEX, { order: albumListCache.map(x => x.id).concat([id]) });
+    await withTimeout(batch.commit(), NET_WRITE_TIMEOUT_MS, 'album-create');
+    albumListCache = albumListCache.concat([{ id, title: t, photoIds: [], coverThumb: '', coverId: '' }]);
+    $('newAlbumTitle').value = ''; albumManageId = id; albumPick.clear();
+    drawDashAlbums(); showToast('Album created', 'success');
+  }catch(e){ showToast('Could not create album — check your connection', 'error'); }
+  finally{ btn.disabled = false; }
+});
+
+/* ============ Header: hide on scroll down, show on scroll up ============ */
+(function(){
+  const h = document.querySelector('header.site-header');
+  if(!h) return;
+  let last = window.scrollY, prev = last, dir = 0, ticking = false;
+  function frame(){
+    ticking = false;
+    const y = Math.max(0, window.scrollY);
+    h.classList.toggle('scrolled', y > 8);
+    if(y <= 60 || $('mainNav').classList.contains('open')){ h.classList.remove('hide'); last = prev = y; return; }
+    const nd = y > prev ? 1 : (y < prev ? -1 : 0);
+    if(nd && nd !== dir){ last = prev; dir = nd; }
+    prev = y;
+    const d = y - last;
+    if(d > 10) h.classList.add('hide');
+    else if(d < -6) h.classList.remove('hide');
   }
-}
+  window.addEventListener('scroll', ()=>{ if(!ticking){ ticking = true; requestAnimationFrame(frame); } }, { passive: true });
+  h.addEventListener('focusin', ()=> h.classList.remove('hide'));
+  frame();
+})();
+
+$('galleryAlbumsBtn').addEventListener('click', openAlbumsOverlay);
 
 /* ============ Init ============ */
 loadAll();
