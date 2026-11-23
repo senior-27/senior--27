@@ -207,6 +207,7 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
   padding:4px 0 4px 18px; border-left:3px solid var(--accent);
 }
 .hero-quote .eyebrow{display:block; margin-bottom:10px; color:var(--accent);}
+.hero-quote[hidden], .hero-quote .eyebrow[hidden]{display:none !important;}
 .hero-quote p.serif{font-size:21px; line-height:1.3; margin:0; font-weight:500; color:var(--ink);}
 
 @media(max-width:860px){
@@ -654,8 +655,8 @@ header.site-header.hide{transform:translateY(calc(-100% - 3px));}
       </div>
       <div class="hero-thumbs" id="heroThumbs"></div>
       <div class="hero-quote">
-        <span class="eyebrow">Captured to Last Forever</span>
-        <p class="serif">How can we go back to being friends?</p>
+        <span class="eyebrow" id="heroQuoteLabel">Captured to Last Forever</span>
+        <p class="serif" id="heroQuoteText">Some memories never fade.</p>
       </div>
     </div>
     <div class="hero-right">
@@ -840,6 +841,16 @@ header.site-header.hide{transform:translateY(calc(-100% - 3px));}
           <label>Hero description</label>
           <textarea id="in_heroDescription"></textarea>
           <button type="button" class="field-suggest-btn" id="useSuggestHeroDescription">Use suggested copy</button>
+        </div>
+        <div class="field">
+          <label>Quote — small label above it</label>
+          <input type="text" id="in_heroQuoteLabel" maxlength="60">
+          <button type="button" class="field-suggest-btn" id="useSuggestHeroQuoteLabel">Use suggested: "Captured to Last Forever"</button>
+        </div>
+        <div class="field">
+          <label>Quote (shown under the hero text — clear it to hide the quote)</label>
+          <textarea id="in_heroQuote" maxlength="160" rows="2"></textarea>
+          <button type="button" class="field-suggest-btn" id="useSuggestHeroQuote">Use suggested: "Some memories never fade."</button>
         </div>
         <div class="field">
           <label>Button text</label>
@@ -2164,6 +2175,15 @@ function renderPublicSite(){
     ? `${esc(heroParts.word)}<br><span class="hero-num">${esc(heroParts.mark)}</span>`
     : esc(heroTitleRaw).replace(/\n/g,'<br>');
   $('heroDescription').textContent = homeSettings.heroDescription || 'A year of moments, faces, and memories — captured together, kept forever.';
+  const hasQ = Object.prototype.hasOwnProperty.call(homeSettings, 'heroQuote');
+  const hasQL = Object.prototype.hasOwnProperty.call(homeSettings, 'heroQuoteLabel');
+  const quoteText = (hasQ ? homeSettings.heroQuote : 'Some memories never fade.') || '';
+  const quoteLabel = (hasQL ? homeSettings.heroQuoteLabel : 'Captured to Last Forever') || '';
+  $('heroQuoteText').textContent = quoteText;
+  $('heroQuoteLabel').textContent = quoteLabel;
+  $('heroQuoteLabel').hidden = !quoteLabel;
+  const heroQuoteBox = document.querySelector('.hero-quote');
+  if(heroQuoteBox) heroQuoteBox.hidden = !quoteText;
   const heroBtn = $('heroButton');
   heroBtn.textContent = (homeSettings.heroButtonText || 'View Gallery') + ' →';
   heroBtn.setAttribute('href', safeUrl(homeSettings.heroButtonUrl) || '#gallery');
@@ -2590,6 +2610,8 @@ function renderDashboard(){
   $('in_heroEyebrow').value = homeSettings.heroEyebrow || '';
   $('in_heroTitle').value = homeSettings.heroTitle || '';
   $('in_heroDescription').value = homeSettings.heroDescription || '';
+  $('in_heroQuoteLabel').value = Object.prototype.hasOwnProperty.call(homeSettings, 'heroQuoteLabel') ? (homeSettings.heroQuoteLabel || '') : 'Captured to Last Forever';
+  $('in_heroQuote').value = Object.prototype.hasOwnProperty.call(homeSettings, 'heroQuote') ? (homeSettings.heroQuote || '') : 'Some memories never fade.';
   $('in_heroButtonText').value = homeSettings.heroButtonText || '';
   $('in_heroButtonUrl').value = homeSettings.heroButtonUrl || '';
   selectedHeroMainId = homeSettings.heroImageId || null;
@@ -2629,6 +2651,8 @@ function wireSuggestBtn(btnId, fieldId, value){
 wireSuggestBtn('useSuggestHeroEyebrow', 'in_heroEyebrow', 'The Official Gallery');
 wireSuggestBtn('useSuggestHeroTitle', 'in_heroTitle', 'SENIOR 27');
 wireSuggestBtn('useSuggestHeroDescription', 'in_heroDescription', 'A year of moments, faces, and memories — captured together, kept forever.');
+wireSuggestBtn('useSuggestHeroQuoteLabel', 'in_heroQuoteLabel', 'Captured to Last Forever');
+wireSuggestBtn('useSuggestHeroQuote', 'in_heroQuote', 'Some memories never fade.');
 wireSuggestBtn('useSuggestHeroButtonText', 'in_heroButtonText', 'View Gallery');
 wireSuggestBtn('useSuggestHeroButtonUrl', 'in_heroButtonUrl', '#gallery');
 // About
@@ -2693,6 +2717,8 @@ $('saveHomeBtn').addEventListener('click', ()=> withBusyButton($('saveHomeBtn'),
       heroEyebrow: $('in_heroEyebrow').value.trim(),
       heroTitle: $('in_heroTitle').value.trim(),
       heroDescription: $('in_heroDescription').value.trim(),
+      heroQuoteLabel: $('in_heroQuoteLabel').value.trim(),
+      heroQuote: $('in_heroQuote').value.trim(),
       heroButtonText: $('in_heroButtonText').value.trim(),
       heroButtonUrl: $('in_heroButtonUrl').value.trim(),
       heroImageId: selectedHeroMainId || null,
